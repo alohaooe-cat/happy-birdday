@@ -28,6 +28,7 @@ jobs:
         env:
           VITE_BASE_PATH: /happy-birdday/
           VITE_GOOGLE_APPS_SCRIPT_URL: ${{ secrets.VITE_GOOGLE_APPS_SCRIPT_URL }}
+          VITE_FORM_TOKEN: ${{ secrets.VITE_FORM_TOKEN }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

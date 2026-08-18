@@ -3,6 +3,8 @@ import type { GuestResponse } from '../types'
 export const STORAGE_KEY = 'happy-birdday-response-v2'
 
 const endpoint = (import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL ?? '').trim()
+// Пропуск для скрипта: отсекает случайный мусор, если кто-то найдёт адрес endpoint.
+const formToken = (import.meta.env.VITE_FORM_TOKEN ?? '').trim()
 
 export const hasRemoteEndpoint = Boolean(endpoint)
 
@@ -44,11 +46,23 @@ export async function sendResponse(response: GuestResponse) {
   const result = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(response),
+    body: JSON.stringify({ ...response, token: formToken }),
     redirect: 'follow',
   })
 
   if (!result.ok) {
     throw new Error(`Google Apps Script returned ${result.status}`)
+  }
+
+  // Тело ответа читается не всегда — если прочиталось, ловим отказ скрипта.
+  let payload: { ok?: boolean; error?: string } | null = null
+  try {
+    payload = await result.json()
+  } catch {
+    payload = null
+  }
+
+  if (payload && payload.ok === false) {
+    throw new Error(`Google Apps Script rejected the request: ${payload.error ?? 'unknown'}`)
   }
 }

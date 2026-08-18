@@ -21,6 +21,13 @@ function doPost(event) {
     const payload = JSON.parse(event.postData.contents);
     if (!payload.responseId) throw new Error('responseId is required');
 
+    // Пропуск. Если свойство FORM_TOKEN не задано, проверка не выполняется
+    // и приём ответов работает как раньше.
+    const expectedToken = PropertiesService.getScriptProperties().getProperty('FORM_TOKEN');
+    if (expectedToken && payload.token !== expectedToken) {
+      return json_({ ok: false, error: 'forbidden' });
+    }
+
     const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
     if (!spreadsheetId) throw new Error('SPREADSHEET_ID is not configured');
 
