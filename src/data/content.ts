@@ -180,6 +180,7 @@ export const siteContent = {
   weatherScenarios: [
     {
       id: 'ideal',
+      icon: 'sun',
       title: 'Без дождя или слабый дождь',
       status: 'ready',
       items: [
@@ -192,6 +193,7 @@ export const siteContent = {
     },
     {
       id: 'rainy-morning',
+      icon: 'storm',
       title: 'Дождина, ураган, смерч',
       status: 'ready',
       items: [
@@ -249,6 +251,9 @@ export const siteContent = {
       { value: 'later', label: 'Присоединюсь к празднику позже', hint: 'Свободный вылет' },
       { value: 'no', label: 'В этот раз прилететь не смогу', hint: 'Остаюсь в гнезде' },
     ],
+    dressPledgeLabel: 'Поддержу пернатый дресс-код',
+    dressPledgeHint: 'Перо, аксессуар или целый образ — на твой выбор.',
+    dressPledgeError: 'Без пера в стаю не пускают. Это не бюрократия, это орнитология.',
     partyLabel: 'Сколько птиц прилетит на прогулку вместе с тобой?',
     partyHint: 'Считаем тебя и тех, кто придёт с тобой.',
     messageLabel: 'Хочешь что-нибудь добавить?',
@@ -269,7 +274,7 @@ export const siteContent = {
     heroAlt: 'Компания нарядных птиц собирается на праздник',
     marquee: ['29 августа', 'Кронштадт', 'разнопёрый слёт', 'happy birdday'],
     introEyebrow: 'Предварительное наблюдение',
-    introReturn: 'Вернуться к маршруту',
+    introReturn: 'Показать мой результат',
     quiz: {
       progress: 'Вопрос {n} из {total}',
       back: 'Назад',

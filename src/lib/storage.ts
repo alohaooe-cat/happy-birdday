@@ -24,6 +24,10 @@ export function loadResponse(): GuestResponse | null {
     const parsed = JSON.parse(raw) as GuestResponse
     if (!parsed.responseId || !parsed.guestName || !['lark', 'pigeon', 'owl'].includes(parsed.testResult)) return null
 
+    if (parsed.dressPledge === undefined) {
+      parsed.dressPledge = false
+    }
+
     if (parsed.attendance === undefined) {
       parsed.attendance = parsed.excursionConfirmed === null
         ? null

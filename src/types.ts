@@ -28,6 +28,7 @@ export type GuestResponse = {
   testResult: BirdType
   selectedFlock: Flock
   attendance: Attendance | null
+  dressPledge: boolean
   excursionConfirmed: boolean | null
   excursionPartySize: number
   guestMessage?: string

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Bird,
   Check,
+  CloudLightning,
   CloudRain,
   ExternalLink,
   Feather,
@@ -14,7 +15,7 @@ import {
   Plus,
   RefreshCcw,
   Sparkles,
-  Umbrella,
+  Sun,
   Users,
 } from 'lucide-react'
 import { BirdMark } from './BirdMark'
@@ -130,6 +131,8 @@ function App() {
   )
   const [partySize, setPartySize] = useState(Math.max(1, initialResponse?.excursionPartySize ?? 1))
   const [guestMessage, setGuestMessage] = useState(initialResponse?.guestMessage ?? '')
+  const [dressPledge, setDressPledge] = useState(initialResponse?.dressPledge ?? false)
+  const [pledgeError, setPledgeError] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(initialResponse ? 'demo' : 'idle')
   const [notice, setNotice] = useState('')
   const personalRef = useRef<HTMLElement>(null)
@@ -249,6 +252,7 @@ function App() {
       testResult: calculatedResult.bird,
       selectedFlock: siteContent.results[calculatedResult.bird].defaultRoute,
       attendance: null,
+      dressPledge: false,
       excursionConfirmed: null,
       excursionPartySize: 0,
       guestMessage: response?.guestMessage ?? guestMessage,
@@ -287,6 +291,13 @@ function App() {
   const confirmRoute = async () => {
     if (!response || attendance === null) return
 
+    if (!dressPledge) {
+      setPledgeError(true)
+      return
+    }
+
+    setPledgeError(false)
+
     const confirmedFlock: Flock = attendance === 'walk' ? 'lark' : 'owl'
     setSelectedFlock(confirmedFlock)
 
@@ -294,6 +305,7 @@ function App() {
       ...response,
       selectedFlock: confirmedFlock,
       attendance,
+      dressPledge,
       excursionConfirmed: attendance === 'walk',
       excursionPartySize: attendance === 'walk' ? Math.max(1, partySize) : 0,
       guestMessage: guestMessage.trim(),
@@ -330,6 +342,7 @@ function App() {
   const route = response ? siteContent.routes[response.testResult] : siteContent.routes.owl
   const isConfirmed = response?.attendance != null
     && response.attendance === attendance
+    && response.dressPledge === dressPledge
     && (response.guestMessage ?? '') === guestMessage.trim()
     && (attendance !== 'walk' || response.excursionPartySize === Math.max(1, partySize))
 
@@ -533,7 +546,7 @@ function App() {
               </div>
               <div className="choice-panel">
                 <div className="route-options" role="group" aria-label="Участие в прогулке с орнитологом">
-                  {siteContent.confirmation.options.map((option, index) => (
+                  {siteContent.confirmation.options.map((option) => (
                     <button
                       key={String(option.value)}
                       className={`choice-button ${attendance === option.value ? 'is-selected' : ''} ${option.value === 'no' ? 'is-decline' : ''}`}
@@ -541,7 +554,6 @@ function App() {
                       aria-pressed={attendance === option.value}
                       onClick={() => setAttendance(option.value)}
                     >
-                      <span className="choice-index">0{index + 1}</span>
                       <Check size={20} aria-hidden="true" />
                       <span className="choice-hint">{option.hint}</span>
                       <span className="choice-label">{option.label}</span>
@@ -574,6 +586,27 @@ function App() {
                     </div>
                   </div>
                 )}
+
+                <div className={`dress-pledge ${pledgeError ? 'has-error' : ''}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={dressPledge}
+                      onChange={(event) => {
+                        setDressPledge(event.target.checked)
+                        if (event.target.checked) setPledgeError(false)
+                      }}
+                    />
+                    <Check size={18} aria-hidden="true" />
+                    <span>
+                      <strong>{siteContent.confirmation.dressPledgeLabel}</strong>
+                      <em>{siteContent.confirmation.dressPledgeHint}</em>
+                    </span>
+                  </label>
+                  {pledgeError && (
+                    <p className="pledge-error" role="alert">{siteContent.confirmation.dressPledgeError}</p>
+                  )}
+                </div>
 
                 <div className="guest-message">
                   <label htmlFor="guest-message">{siteContent.confirmation.messageLabel}</label>
@@ -703,7 +736,9 @@ function CommonSections() {
           {siteContent.weatherScenarios.map((scenario) => (
             <article key={scenario.id}>
               <div>
-                <Umbrella size={22} aria-hidden="true" />
+                {scenario.icon === 'sun'
+                  ? <Sun size={24} aria-hidden="true" />
+                  : <CloudLightning size={24} aria-hidden="true" />}
                 <h3>{scenario.title}</h3>
               </div>
               <ol>
@@ -750,11 +785,7 @@ function CommonSections() {
                 )}
               </div>
               <strong>{product.name}</strong>
-              <span className="product-link">
-                {'image' in product
-                  ? product.url.includes('ozon.ru') ? 'Ozon' : 'AliExpress'
-                  : 'AliExpress · ссылка-заглушка'} <ExternalLink size={14} aria-hidden="true" />
-              </span>
+
             </a>
           ))}
         </div>
