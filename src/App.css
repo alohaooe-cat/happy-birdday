@@ -33,6 +33,30 @@ body {
   background: var(--paper);
   font-family: var(--sans);
   font-variation-settings: "wght" 480;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
+}
+
+/* Крупная типографика переносами не делится: там ломается рисунок строки */
+h1,
+h2,
+h3,
+legend,
+.birdday-lockup,
+.eyebrow,
+.button,
+.wordmark,
+.masthead p,
+.flight-marquee,
+.countdown,
+.timeline-title h3,
+.accent-name,
+.accent-date {
+  -webkit-hyphens: none;
+  hyphens: none;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 button,
@@ -1672,16 +1696,15 @@ h3 {
 
 .dress-copy {
   display: grid;
-  grid-template-columns: 80px minmax(0, 0.5fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  grid-template-columns: 80px minmax(0, 0.5fr) auto minmax(0, 1.2fr);
   gap: 28px clamp(28px, 3.4vw, 52px);
   align-items: start;
   margin-bottom: clamp(50px, 8vw, 100px);
 }
 
 .dress-copy h2 {
-  min-width: 0;
   color: var(--lime);
-  overflow-wrap: break-word;
+  white-space: nowrap;
 }
 
 .dress-details {
