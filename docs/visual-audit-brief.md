@@ -1,210 +1,232 @@
-# Задание: визуальный аудит и дизайн-проход по сайту HAPPY BIRDDAY
+# Brief: visual audit and design pass — HAPPY BIRDDAY
 
-## Что это за проект
+## What this project is
 
-Одностраничное приглашение на день рождения. Гость проходит тест «какая ты
-птица», получает один из трёх результатов (Жаворонок, Голубь, Сова), видит
-план дня и отмечается в «Перекличке». Сайт уже опубликован и разослан не
-будет до твоих правок, но ломать его нельзя.
+A single-page birthday invitation. The guest takes a "what bird are you"
+quiz, gets one of three results (Жаворонок / Голубь / Сова — lark, pigeon,
+owl), reads the plan for the day, and checks in via the "Перекличка"
+(roll call) section. The site is already published. It will not be sent to
+guests until your changes land, but do not break it.
 
-- Папка: `/Users/tatianavlasova/Life-lab/happy-birdday`
-- Живой сайт: https://alohaooe-cat.github.io/happy-birdday/
-- Репозиторий: https://github.com/alohaooe-cat/happy-birdday
-- Стек: Vite + React + TypeScript, обычный CSS без фреймворков
+- Folder: `/Users/tatianavlasova/Life-lab/happy-birdday`
+- Live site: https://alohaooe-cat.github.io/happy-birdday/
+- Repository: https://github.com/alohaooe-cat/happy-birdday
+- Stack: Vite + React + TypeScript, plain CSS, no framework
 
-## Прежде чем начать
+**All site content is in Russian and must stay Russian.** Talk to the owner
+in Russian too — read `/Users/tatianavlasova/Life-lab/wiki/communication.md`
+first. Short version: no filler, no "great question", never describe a plan
+instead of doing the work.
 
-Прочитай `/Users/tatianavlasova/Life-lab/wiki/communication.md` — там правила
-общения с заказчицей. Коротко: русский язык, никакой воды, никаких
-«отличный вопрос», не описывать план вместо действия.
-
-## Как запускать и проверять
+## Running and checking
 
 ```bash
 cd /Users/tatianavlasova/Life-lab/happy-birdday
-npm run dev          # локальный сервер на 5173
-npx tsc -b --noEmit  # типы
-npx oxlint src       # линт
-npm run build        # сборка
+npm run dev          # dev server on :5173
+npx tsc -b --noEmit  # types
+npx oxlint src       # lint
+npm run build        # production build
 ```
 
-Перед любым коммитом должны проходить все три проверки.
+All three checks must pass before any commit.
 
-Публикация: пуш в `main` запускает GitHub Actions, который собирает и
-выкладывает сайт. Секреты `VITE_GOOGLE_APPS_SCRIPT_URL` и `VITE_FORM_TOKEN`
-уже заведены в репозитории — не трогай их и не выводи в логи.
+Deployment: pushing to `main` triggers a GitHub Actions workflow that builds
+and publishes the site. The secrets `VITE_GOOGLE_APPS_SCRIPT_URL` and
+`VITE_FORM_TOKEN` are already configured in the repository — do not touch
+them and never print them to logs.
 
-**Не сломай отправку ответов.** Файлы `src/lib/storage.ts`,
-`google-apps-script/Code.gs` и поля в `src/types.ts` завязаны на Google
-Sheets, куда падают ответы гостей. Если меняешь что-то рядом — проверь, что
-`sendResponse` по-прежнему шлёт тот же формат.
+**Do not break response submission.** `src/lib/storage.ts`,
+`google-apps-script/Code.gs` and the fields in `src/types.ts` are wired to a
+Google Sheet that collects guest responses. If you touch anything nearby,
+verify `sendResponse` still sends the same payload shape.
 
-## Визуальная идея
+## Design intent
 
-Яркая редакционная афиша: немного панка и журнальной вёрстки, насыщенные
-синий, коралловый и лаймовый, бумажная фактура, выразительная кириллическая
-типографика, птичий юмор. Сайт **не должен** выглядеть как корпоративный
-лендинг, интернет-магазин или шаблонный конструктор.
+A loud editorial poster: a bit of punk, a bit of magazine layout, saturated
+blue / coral / lime, paper texture, expressive Cyrillic typography, bird
+humour. The site must **not** look like a corporate landing page, an online
+shop, or a website-builder template.
 
-Палитра и шрифты — в `:root` в начале `src/App.css`. Заголовки — Prata
-(засечки), интерфейс — Unbounded, текст — Manrope, имя орнитолога Ричарда —
-Great Vibes (каллиграфия).
+Palette and fonts live in `:root` at the top of `src/App.css`. Headings use
+Prata (serif), UI uses Unbounded, body text uses Manrope, and the
+ornithologist's name (Ричард) uses Great Vibes (copperplate script).
 
-## Где лежат тексты
+## Where the copy lives
 
-Все тексты и подписи интерфейса — в `src/data/content.ts`. Там же блок `ui`
-с надписями кнопок, заголовками разделов и сообщениями. В коде текста быть
-не должно; если добавляешь новую надпись — заводи ключ в `content.ts`.
+All content and UI strings are in `src/data/content.ts`, including a `ui`
+block with button labels, section headings and status messages. No literal
+copy in components — if you add a new string, add a key to `content.ts`.
 
-В текстах работает лёгкая разметка, её обрабатывает компонент `RichText`
-в `src/App.tsx`:
+Text supports lightweight inline markup, handled by the `RichText` component
+in `src/App.tsx`:
 
-- `*Ричард*` — каллиграфический шрифт
-- `~Таня~` — цветом
-- `**29 августа**` — лаймовый маркер
-- `__26 августа__` — коралловый маркер
-
----
-
-# Задачи
-
-## 1. Аудит выравниваний — главное
-
-Пройди сайт целиком и проверь выравнивание текстов во всех блоках. Это
-основная претензия: колонки, надзаголовки, заголовки и абзацы местами
-съезжают друг относительно друга.
-
-Проверь на ширинах **390, 768, 1280, 1440, 1920 и 2560 px**, а также на
-низком окне (например 1440×800) — часть проблем видна только там. Проверь
-все три результата теста, оба состояния перекличек (до и после сохранения)
-и вариант «В этот раз прилететь не смогу».
-
-Не полагайся на глаз: измеряй `getBoundingClientRect()` у соседних
-элементов и сравнивай координаты. Заказчица уже несколько раз замечала
-расхождения, которые на скриншоте почти незаметны.
-
-## 2. Заголовки разделов — вверх, а не по центру
-
-Сейчас в нескольких секциях заголовок с надзаголовком стоит по вертикали
-посередине колонки, а рядом текст начинается сверху. Нужно, чтобы заголовки
-прижимались к верху блока — так аккуратнее.
-
-В `src/App.css` больше десятка правил `align-items: center`. Разбери их:
-где это выравнивание внутри строки (кнопки, чипы, иконка рядом с текстом) —
-оставь, где это секционная сетка — переведи на `start`.
-
-## 3. Раздел «Оперение» (дресс-код) — переделать
-
-Заказчица считает его некрасивым. Сейчас это сетка `.dress-copy` из четырёх
-колонок: иконка пера, надзаголовок, огромный заголовок «Оперение» и абзац.
-Пропорции разваливаются, заголовок пришлось фиксировать `white-space: nowrap`.
-
-Сделай композицию заново, в духе остального сайта. Ограничений два: раздел
-тёмный, и в нём дальше идёт подборка аксессуаров.
-
-## 4. Убрать нумерацию везде
-
-Числа `01 02 03` используются в четырёх местах:
-
-- `src/App.tsx:707` — план дня, `.timeline-index`
-- `src/App.tsx:806` — шаги с подарками, `.gift-steps`
-- `src/App.tsx:529` — особенности маршрута, `.route-list`
-- `src/App.css:1693` — погодные сценарии, счётчик `weather-step`
-
-Замени на минималистичные значки: точки, галочки или контур пера (перо
-хорошо ложится в птичью тему). Значок может быть один на весь сайт или
-разный по разделам — на твой вкус, но система должна читаться.
-
-Учти: в плане дня номер сейчас ещё и коралловая плашка с тенью, она держит
-левую колонку. Не оставь на её месте дыру.
-
-## 5. Убрать зачёркнутое «th» в логотипе
-
-`<span className="correction-th">th</span>` в `src/App.tsx:380` (обложка) и
-`src/App.tsx:836` (футер), стили — `.correction-th` в `src/App.css:299`.
-Убери и разметку, и стили целиком, включая правило в медиазапросе на 2569.
-Логотип должен читаться как `HAPPY BIRDDAY` без корректорской пометки.
-
-## 6. Подборку аксессуаров сложить в сердце
-
-Пятнадцать карточек в `.product-grid` сейчас лежат вразнобой прямоугольной
-сеткой. Нужно выложить их в форме сердца.
-
-Требования: на узких экранах сердце разваливаться не должно — предусмотри
-запасную раскладку. Карточки остаются кликабельными ссылками, подписи
-читаемыми. Изображения лежат в `public/products/`, список — в `products`
-в `content.ts`.
-
-## 7. Открытка на обложке — приколоть кнопкой
-
-Картинка `.bird-scene` на первом экране оформлена как бумажная открытка с
-белым паспарту. Добавь канцелярскую кнопку-гвоздик в углу — будто открытка
-приколота к стене. Кнопку рисуй в CSS или SVG, не картинкой.
-
-## 8. Панель «Бланк наблюдателя» в перекличке
-
-Раздел «Перекличка» (`.confirmation`, `.choice-panel` в `src/App.css`).
-Две претензии:
-
-**Цвета.** Сочетание не нравится заказчице. Сейчас на светло-голубом фоне
-секции лежит белая панель с чёрной рамкой и тенью, коралловым ярлыком
-«бланк наблюдателя», лаймовым выбранным вариантом с коралловой тенью и
-бледно-розовым блоком галочки дресс-кода. Розовый блок ошибки и коралловый
-ярлык рядом с лаймовым выбором дают мутную смесь. Пересобери палитру
-панели: она должна быть яркой и читаемой, в общей системе сайта, но
-спокойнее, чем сейчас.
-
-**Панель не помещается на экран.** На типичных ноутбучных высотах бланк
-не влезает целиком: видна только часть, а ярлык сверху обрезается. Гость
-не понимает, что ниже есть кнопка отправки. Подумай, как уложить форму
-компактнее — например, счётчик птиц и галочку в один ряд, или сгруппировать
-поля плотнее. Проверь на 1440×800 и 1280×720.
-
-## 9. Галочка дресс-кода при отказе прийти
-
-В перекличке три варианта. Третий — «В этот раз прилететь не смогу».
-Галочка «Поддержу пернатый дресс-код» сейчас обязательна при любом выборе:
-без неё кнопка не срабатывает и показывает «Ну пожааааааалуйста Т_Т».
-
-Для отказавшегося гостя это бессмыслица — он не придёт, наряжаться незачем,
-а отметиться в списке он всё равно не может. Сделай так, чтобы при выборе
-третьего варианта блок с галочкой деактивировался: визуально гасился и
-переставал быть обязательным.
-
-Логика в `src/App.tsx`: состояние `attendance` (`'walk' | 'later' | 'no'`),
-`dressPledge`, проверка внутри `confirmRoute`, вёрстка блока — `.dress-pledge`.
-Учти, что `dressPledge` уходит в таблицу отдельной колонкой: при отказе
-нужно писать `false`, а не ломать формат.
-
-## 10. Карточка теста упирается в низ экрана
-
-Экраны с вопросами и экран с именем живут в одной карточке `.quiz-shell`
-(`src/App.css`). У неё `min-height: 580px`, внутри у формы имени ещё
-`min-height: 470px`, а у секции `.quiz-section` вертикальные отступы до 90px.
-В сумме на невысоком окне карточка не помещается: низ вместе с лаймовой
-тенью уходит за край экрана.
-
-Особенно заметно на форме имени — там между заголовком «Как тебя зовут?» и
-кнопками много воздуха, который можно сократить без потерь.
-
-Сделай так, чтобы карточка целиком помещалась на типовых высотах. Проверь
-на 1440×800, 1280×720 и 1440×900, на всех семи вопросах и на экране с
-именем: самый длинный вопрос — четвёртый, про 03:40.
-
-## 11. Бегущая строка — медленнее
-
-`.flight-marquee-track` в `src/App.css:481`, сейчас `14s`. Слишком быстро.
-Подбери спокойнее, но следи, чтобы лента не рвалась: слова повторяются
-трижды в каждой половине, и на широких экранах справа не должно появляться
-пустой полосы.
+- `*Ричард*` — script font
+- `~Таня~` — accent colour
+- `**29 августа**` — lime marker
+- `__26 августа__` — coral marker
 
 ---
 
-# Как отчитываться
+# Tasks
 
-- Не пиши «готово», пока не проверил в браузере на нескольких ширинах.
-- Не выдумывай результат: если что-то не проверил — так и скажи.
-- В конце перечисли, что изменил, и отдельно — что нашёл, но не стал
-  трогать без согласования.
-- Заказчица активно правит тексты в `content.ts` параллельно с тобой. Перед
-  коммитом посмотри `git status` и `git diff` — её правки не откатывай.
+## 1. Alignment audit — the main one
+
+Walk the entire site and check text alignment in every block. This is the
+owner's main complaint: columns, eyebrows, headings and paragraphs drift
+relative to each other in several places.
+
+Check at widths **390, 768, 1280, 1440, 1920 and 2560 px**, and also on a
+short window (e.g. 1440×800) — some problems only appear there. Check all
+three quiz results, both states of the roll call (before and after saving),
+and the "В этот раз прилететь не смогу" (can't come) path.
+
+Do not trust your eye: measure `getBoundingClientRect()` on neighbouring
+elements and compare coordinates. The owner has repeatedly spotted
+misalignments that are almost invisible in a screenshot.
+
+## 2. Section headings at the top, not vertically centred
+
+In several sections the heading and its eyebrow sit vertically centred in
+their column while the adjacent text starts at the top. Headings should be
+top-aligned — the owner finds that tidier.
+
+`src/App.css` has more than a dozen `align-items: center` rules. Go through
+them: keep the ones that align content within a row (buttons, chips, an icon
+next to text), switch the section-level grids to `start`.
+
+## 3. Rework the "Оперение" (dress code) section
+
+The owner finds it ugly. It is currently a four-column `.dress-copy` grid:
+feather icon, eyebrow, an oversized "Оперение" heading, and a paragraph. The
+proportions fall apart, and the heading had to be pinned with
+`white-space: nowrap` to stop it breaking mid-word.
+
+Rebuild the composition in the spirit of the rest of the site. Two
+constraints: the section is dark, and the accessory gallery follows it.
+
+## 4. Remove all numbering
+
+The `01 02 03` numerals appear in four places:
+
+- `src/App.tsx:707` — plan of the day, `.timeline-index`
+- `src/App.tsx:806` — gift steps, `.gift-steps`
+- `src/App.tsx:529` — route highlights, `.route-list`
+- `src/App.css:1693` — weather scenarios, the `weather-step` counter
+
+Replace them with minimal marks: dots, ticks, or a feather outline (a
+feather fits the bird theme well). One mark across the whole site or
+different marks per section is your call, but the system must read as
+deliberate.
+
+Note: in the plan of the day the numeral is also a coral tile with a hard
+shadow that anchors the left column. Don't leave a hole where it was.
+
+## 5. Remove the struck-through "th" in the wordmark
+
+`<span className="correction-th">th</span>` at `src/App.tsx:380` (cover) and
+`src/App.tsx:836` (footer); styles at `.correction-th` in `src/App.css:299`.
+Remove both the markup and the styles, including the media-query rule around
+line 2569. The wordmark should read as `HAPPY BIRDDAY` with no proofreader's
+correction mark.
+
+## 6. Lay the accessory gallery out in a heart shape
+
+The fifteen cards in `.product-grid` currently sit in a scattered
+rectangular grid. Arrange them into a heart.
+
+Requirements: the heart must not fall apart on narrow screens — provide a
+fallback layout. Cards stay clickable links and labels stay readable. Images
+are in `public/products/`, the list is the `products` array in `content.ts`.
+
+## 7. Pin the cover postcard with a push-pin
+
+The `.bird-scene` image on the first screen is styled as a paper postcard
+with a white mat. Add a stationery push-pin in one corner, as if the
+postcard were pinned to a wall. Draw the pin in CSS or SVG, not as an image
+file.
+
+## 8. The "Бланк наблюдателя" panel in the roll call
+
+Section "Перекличка" (`.confirmation`, `.choice-panel` in `src/App.css`).
+Two complaints:
+
+**Colours.** The owner dislikes the combination. Right now a white panel
+with a black border and hard shadow sits on the section's pale-blue
+background, with a coral "бланк наблюдателя" tab, a lime selected option
+carrying a coral shadow, and a pale-pink dress-code checkbox block. The pink
+error block and the coral tab next to the lime selection make a muddy mix.
+Rebuild the panel's palette: bright and legible, inside the site's system,
+but calmer than it is now.
+
+**The panel does not fit on screen.** At typical laptop heights only part of
+the form is visible and the tab at the top is clipped, so a guest may not
+realise there is a submit button below. Find a more compact layout — for
+example, putting the party-size stepper and the dress-code checkbox on one
+row, or grouping the fields more tightly. Verify at 1440×800 and 1280×720.
+
+## 9. Dress-code checkbox when the guest declines
+
+The roll call offers three options. The third is "В этот раз прилететь не
+смогу" (I can't come this time). The "Поддержу пернатый дресс-код" checkbox
+is currently mandatory for every option: without it the submit button
+refuses and shows "Ну пожааааааалуйста Т_Т".
+
+For a guest who declines this is nonsense — they aren't coming, there is
+nothing to dress up for, and yet they cannot check in at all. Make the
+checkbox block deactivate when the third option is selected: visually dimmed
+and no longer required.
+
+The logic is in `src/App.tsx`: the `attendance` state
+(`'walk' | 'later' | 'no'`), `dressPledge`, the guard inside `confirmRoute`,
+and the `.dress-pledge` markup. Note that `dressPledge` is written to the
+spreadsheet as its own column — on a decline it must still send `false`
+rather than break the payload shape.
+
+## 10. The quiz card runs past the bottom of the screen
+
+The question screens and the name screen share one card, `.quiz-shell`
+(`src/App.css`). It has `min-height: 580px`, the name form inside adds
+`min-height: 470px`, and `.quiz-section` adds up to 90px of vertical
+padding. On a short window the total does not fit: the bottom of the card,
+along with its lime shadow, runs off the screen.
+
+It is most obvious on the name screen, where there is a lot of slack between
+the "Как тебя зовут?" heading and the buttons that can be reduced with no
+loss.
+
+Make the card fit at typical heights. Verify at 1440×800, 1280×720 and
+1440×900, across all seven questions and the name screen — the tallest
+question is the fourth one, about 03:40.
+
+## 11. A long guest name must fit in the footer
+
+The footer ends with "Буду ждать тебя, {name}!" (`.final-invitation` in
+`src/App.css`, rendered in `src/App.tsx`). The name comes from guest input,
+and the field allows up to 80 characters. With a long name the huge serif
+line runs straight off the right edge of the screen.
+
+The whole name must be visible. Wrapping onto several lines is fine and
+expected. Make sure the type still scales sensibly, the lime-on-blue text
+shadow does not smear, and nothing overflows horizontally at 390 px.
+
+Test with a deliberately long name — for example a 40-character string of
+Cyrillic letters — and also with a single unbroken word, which is the harder
+case.
+
+## 12. Slow the marquee down
+
+`.flight-marquee-track` in `src/App.css:481` is currently `14s`. Too fast.
+Pick something calmer, but keep the ribbon seamless: the words repeat three
+times in each half of the track, and no empty gap may appear on the right on
+wide screens.
+
+---
+
+# Reporting
+
+- Do not say "done" until you have checked it in a browser at several widths.
+- Do not invent results. If you did not verify something, say so.
+- At the end, list what you changed, and separately what you found but chose
+  not to touch without approval.
+- The owner edits copy in `content.ts` in parallel with you. Check
+  `git status` and `git diff` before committing — do not revert her edits.
