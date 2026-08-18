@@ -403,9 +403,9 @@ function App() {
           <div className="flight-marquee-track">
             {[0, 1].map((group) => (
               <div className="flight-marquee-group" key={group}>
-                {ui.marquee.map((word) => (
-                  <span key={word}>{word}<i>✦</i></span>
-                ))}
+                {[0, 1, 2].map((pass) => ui.marquee.map((word) => (
+                  <span key={`${pass}-${word}`}>{word}<i>✦</i></span>
+                )))}
               </div>
             ))}
           </div>
