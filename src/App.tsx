@@ -35,6 +35,10 @@ function plural(count: number, one: string, few: string, many: string) {
 
 const ui = siteContent.ui
 
+function asset(path: string) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+}
+
 function RichText({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__|~[^~]+~|\*[^*]+\*)/g)
   return (
@@ -371,7 +375,7 @@ function App() {
             <div className="bird-scene">
               <img
                 className="hero-birds"
-                src="/hero-bird-friends.webp"
+                src={asset('/hero-bird-friends.webp')}
                 alt={ui.heroAlt}
                 fetchPriority="high"
               />
@@ -731,7 +735,7 @@ function CommonSections() {
               <div className={`product-placeholder accent-${product.accent} ${'image' in product ? 'has-image' : ''}`}>
                 {'image' in product ? (
                   <img
-                    src={product.image}
+                    src={asset(product.image)}
                     alt={product.name}
                     width={product.imageWidth}
                     height={product.imageHeight}
