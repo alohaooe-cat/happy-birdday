@@ -674,7 +674,6 @@ function CommonSections() {
               </div>
               <div>
                 <p><RichText text={item.text} /></p>
-                {'address' in item && <p className="timeline-address">{item.address}</p>}
                 {'links' in item && (
                   <div className="timeline-links">
                     {item.links.map((link) => (
