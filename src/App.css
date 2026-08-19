@@ -3014,8 +3014,14 @@ h3 {
 }
 
 @media (max-width: 720px) {
+  /* шапка не липнет: на телефоне закреплённая полоса съедала экран
+     и мешала. Раз она уезжает вверх, отступ для якорей не нужен. */
   html {
-    scroll-padding-top: 52px;
+    scroll-padding-top: 0;
+  }
+
+  .masthead {
+    position: static;
   }
 
   .countdown-units {
