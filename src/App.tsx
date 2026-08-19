@@ -981,6 +981,7 @@ function CommonSections() {
           </div>
           <div className="dress-details">
             <p>{siteContent.dressCode.text}</p>
+            <p className="dress-timing">{siteContent.dressCode.timingNote}</p>
           </div>
         </div>
         <p className="inspiration-note">{siteContent.dressCode.inspirationText}</p>

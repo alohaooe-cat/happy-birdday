@@ -2184,6 +2184,14 @@ h3 {
   line-height: 1.55;
 }
 
+/* организационная сноска: тише основного абзаца, но в той же колонке.
+   Селектор с родителем, чтобы перебить .dress-details > p без !important */
+.dress-details > .dress-timing {
+  margin-top: clamp(14px, 1.4vw, 20px);
+  color: rgba(255, 253, 246, 0.72);
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+}
+
 .inspiration-note {
   position: relative;
   z-index: 2;
