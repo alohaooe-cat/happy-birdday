@@ -693,17 +693,20 @@ function App() {
                   <em className="plan-kept">{ui.result.keptOriginal}</em>
                 )}
               </div>
-              <ol className="route-list">
-                {route.items.map((item) => (
-                  <li key={item}>
-                    <span className="list-mark" aria-hidden="true"><Feather size={19} strokeWidth={1.7} /></span>
-                    <p><RichText text={item} /></p>
-                  </li>
-                ))}
-              </ol>
-              {route.items.some((item) => item.includes('Ричард')) && (
-                <p className="guide-note"><RichText text={ui.result.guideNote} /></p>
-              )}
+              <div className="plan-list">
+                <p className="eyebrow">{ui.result.planEyebrow}</p>
+                <ol className="route-list">
+                  {route.items.map((item) => (
+                    <li key={item}>
+                      <span className="list-mark" aria-hidden="true"><Feather size={19} strokeWidth={1.7} /></span>
+                      <p><RichText text={item} /></p>
+                    </li>
+                  ))}
+                </ol>
+                {route.items.some((item) => item.includes('Ричард')) && (
+                  <p className="guide-note"><RichText text={ui.result.guideNote} /></p>
+                )}
+              </div>
             </section>
 
             <CommonSections />

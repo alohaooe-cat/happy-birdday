@@ -1727,7 +1727,9 @@ h3 {
   /* раскладка как в «Подарках»: равные колонки, содержимое по верху */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: start;
-  column-gap: clamp(50px, 9vw, 150px);
+  /* row-gap работает только в одноколоночной раскладке: без него надзаголовок
+     списка вставал вплотную к лиду */
+  gap: clamp(34px, 5vw, 56px) clamp(50px, 9vw, 150px);
   padding: clamp(72px, 10vw, 150px) clamp(18px, 8vw, 130px);
   overflow: hidden;
   color: var(--white);
@@ -2873,9 +2875,13 @@ h3 {
   background: var(--coral);
 }
 
+.plan-list {
+  min-width: 0;
+}
+
+/* сноска живёт внутри правой колонки, сразу под списком */
 .guide-note {
-  grid-column: 2;
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   color: rgba(255, 253, 246, 0.72);
   font-size: 0.86rem;
 }
@@ -3191,12 +3197,6 @@ h3 {
   .personal-plan {
     grid-template-columns: 1fr;
     padding: 72px 18px;
-  }
-
-  /* grid-column: 2 нужен только двухколоночной раскладке. В одну колонку он
-     создавал неявную вторую колонку, и список маршрута сжимался до 85px. */
-  .guide-note {
-    grid-column: 1;
   }
 
   .day-plan {

@@ -300,6 +300,7 @@ export const siteContent = {
       title: 'Ты — {bird}',
       recommended: 'Рекомендованный маршрут',
       keptOriginal: 'Исходный результат теста сохранён.',
+      planEyebrow: 'Ключевые особенности маршрута',
       guideNote: '*Ричард* — наш гид-орнитолог',
     },
     dayPlan: {
