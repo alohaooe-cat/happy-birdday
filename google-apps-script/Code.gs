@@ -1,4 +1,6 @@
 const SHEET_NAME = 'Responses';
+// Отдельная вкладка: кто как отвечал на вопросы теста.
+const ANSWERS_SHEET_NAME = 'Answers';
 
 const HEADERS = [
   'responseId',
@@ -60,9 +62,52 @@ function doPost(event) {
       sheet.appendRow(row);
     }
 
+    // Расшифровка ответов — во вторую вкладку. Ошибка здесь не должна
+    // ломать приём основного ответа, поэтому отдельный try.
+    try {
+      writeAnswers_(spreadsheet, payload);
+    } catch (answersError) {
+      console.error('answers sheet: ' + answersError);
+    }
+
     return json_({ ok: true, responseId: payload.responseId, updated: Boolean(existingRow) });
   } catch (error) {
     return json_({ ok: false, error: String(error) });
+  }
+}
+
+/**
+ * Матрица ответов: строка — гость, столбец — вопрос, в клетке выбранный ответ.
+ * Порядок вопросов берётся из присланной расшифровки, поэтому шапка
+ * переписывается, когда набор вопросов меняется.
+ */
+function writeAnswers_(spreadsheet, payload) {
+  const pairs = payload.answerLabels;
+  if (!pairs || !pairs.length) return;
+
+  const sheet = spreadsheet.getSheetByName(ANSWERS_SHEET_NAME)
+    || spreadsheet.insertSheet(ANSWERS_SHEET_NAME);
+
+  const headers = ['responseId', 'guestName', 'testResult']
+    .concat(pairs.map(function (pair) { return pair.question; }));
+
+  const currentHeaders = sheet.getLastRow() === 0
+    ? []
+    : sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  if (String(currentHeaders) !== String(headers)) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+
+  const row = [payload.responseId, payload.guestName || '', payload.testResult || '']
+    .concat(pairs.map(function (pair) { return pair.answer; }));
+
+  const existingRow = findResponseRow_(sheet, payload.responseId);
+  if (existingRow) {
+    sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
+  } else {
+    sheet.appendRow(row);
   }
 }
 

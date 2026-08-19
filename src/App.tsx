@@ -24,7 +24,7 @@ import { BirdMark } from './BirdMark'
 import { siteContent as rawContent } from './data/content'
 import { typoDeep } from './lib/typography'
 import { createResponseId, hasRemoteEndpoint, loadResponse, saveResponse, sendResponse } from './lib/storage'
-import type { Attendance, BirdType, Flock, GuestResponse, SaveStatus } from './types'
+import type { AnswerRecord, Attendance, BirdType, Flock, GuestResponse, SaveStatus } from './types'
 import './App.css'
 
 type Stage = 'intro' | 'quiz' | 'name' | 'result'
@@ -78,6 +78,24 @@ const CONFETTI = [
   { left: 94, size: 8, round: true, color: 'var(--lime)', opacity: 0.55, duration: 22, delay: -8 },
   { left: 2, size: 4, round: false, color: 'var(--coral)', opacity: 0.6, duration: 28, delay: -22 },
 ]
+
+// В таблицу текст уходит без неразрывных пробелов и word joiner'ов,
+// которые нужны только вёрстке.
+function plainText(text: string) {
+  return text.replace(/\u2060/g, '').replace(/\u00A0/g, ' ')
+}
+
+// Гости, прошедшие тест до появления расшифровки, хранят только id ответов.
+// Собираем текст обратно по ним, иначе они не попадут во вкладку Answers.
+function labelsFromAnswers(answers: AnswerRecord[]) {
+  const pairs: { question: string; answer: string }[] = []
+  for (const record of answers) {
+    const question = siteContent.questions.find((item) => item.id === record.questionId)
+    const answer = question?.answers.find((item) => item.id === record.answerId)
+    if (question && answer) pairs.push({ question: plainText(question.prompt), answer: plainText(answer.label) })
+  }
+  return pairs
+}
 
 function asset(path: string) {
   return `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
@@ -366,13 +384,22 @@ function App() {
     if (!cleanName) return
 
     const now = new Date().toISOString()
+    const picked = siteContent.questions.map((question, index) => ({
+      question,
+      answer: question.answers.find((item) => item.id === quizAnswers[index]) ?? question.answers[1],
+    }))
     const nextResponse: GuestResponse = {
       responseId: response?.responseId ?? createResponseId(),
       guestName: cleanName,
-      answers: siteContent.questions.map((question, index) => {
-        const answer = question.answers.find((item) => item.id === quizAnswers[index]) ?? question.answers[1]
-        return { questionId: question.id, answerId: answer.id, score: answer.score }
-      }),
+      answers: picked.map(({ question, answer }) => ({
+        questionId: question.id,
+        answerId: answer.id,
+        score: answer.score,
+      })),
+      answerLabels: picked.map(({ question, answer }) => ({
+        question: plainText(question.prompt),
+        answer: plainText(answer.label),
+      })),
       score: calculatedResult.score,
       testResult: calculatedResult.bird,
       selectedFlock: siteContent.results[calculatedResult.bird].defaultRoute,
@@ -431,6 +458,7 @@ function App() {
 
     const nextResponse: GuestResponse = {
       ...response,
+      answerLabels: response.answerLabels ?? labelsFromAnswers(response.answers),
       selectedFlock: confirmedFlock,
       attendance,
       dressPledge: effectiveDressPledge,

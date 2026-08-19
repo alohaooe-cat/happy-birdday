@@ -24,6 +24,8 @@ export type GuestResponse = {
   responseId: string
   guestName: string
   answers: AnswerRecord[]
+  /** Читаемая расшифровка ответов — для отдельной вкладки в таблице. */
+  answerLabels?: { question: string; answer: string }[]
   score: number
   testResult: BirdType
   selectedFlock: Flock
