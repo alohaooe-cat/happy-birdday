@@ -211,6 +211,7 @@ export const siteContent = {
     text: 'Приходи так, как тебе комфортно, но будет очень круто, если ты поддержишь птичью тематику: добавишь перья, аксессуар или соберёшь целый образ. Будут классные фотки!',
     timingNote: 'На прогулку и на пляж наряжаться не нужно — переоденемся позже.',
     inspirationText: 'Ниже — несколько картинок для вдохновения',
+    clickHint: 'Каждая картинка кликабельна и ведёт в магазин',
   },
   products: [
     { id: 'bird-mask', name: 'Маска птицы', category: 'Маска с клювом', url: 'https://ali.click/iwm1j13', image: '/products/bird-mask.jpg', imageWidth: 800, imageHeight: 800, accent: 'coral' },

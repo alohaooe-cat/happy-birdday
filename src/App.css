@@ -581,7 +581,9 @@ h3 {
   position: absolute;
   z-index: 5;
   top: -10%;
-  right: 10%;
+  /* 29% держит перо рядом с HAPPY и не даёт им столкнуться на узких
+     десктопах: там плашка занимает до 50% ширины колонки */
+  right: 29%;
   width: clamp(58px, 6vw, 96px);
   height: auto;
   color: var(--lime);
@@ -2192,12 +2194,21 @@ h3 {
   font-size: clamp(0.95rem, 1.4vw, 1.1rem);
 }
 
+.inspiration-hint {
+  position: relative;
+  z-index: 2;
+  max-width: 60ch;
+  margin: 0 0 42px 1.5vw;
+  color: rgba(255, 253, 246, 0.72);
+  font-size: clamp(0.92rem, 1.3vw, 1.05rem);
+}
+
 .inspiration-note {
   position: relative;
   z-index: 2;
   display: inline-block;
   max-width: 760px;
-  margin: 0 0 42px 1.5vw;
+  margin: 0 0 16px 1.5vw;
   padding: 10px 14px 11px;
   border: 1px solid var(--ink);
   color: var(--ink);

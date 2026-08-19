@@ -1002,6 +1002,7 @@ function CommonSections() {
           </div>
         </div>
         <p className="inspiration-note">{siteContent.dressCode.inspirationText}</p>
+        <p className="inspiration-hint">{siteContent.dressCode.clickHint}</p>
         <div className="product-grid" aria-label="Подборка аксессуаров">
           {siteContent.products.map((product) => (
             <a key={product.id} className="product" href={product.url} target="_blank" rel="noreferrer">
