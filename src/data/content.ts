@@ -249,7 +249,7 @@ export const siteContent = {
       { value: 'later', label: 'Присоединюсь к празднику позже', hint: 'Свободный вылет' },
       { value: 'no', label: 'В этот раз прилететь не смогу', hint: 'Остаюсь в гнезде' },
     ],
-    panelSticker: 'Бланк наблюдателя',
+    panelSticker: 'Лётный лист',
     dressPledgeLabel: 'Поддержу пернатый дресс-код',
     dressPledgeHint: 'Перо, аксессуар или целый образ — на твой выбор.',
     dressPledgeError: 'Ну пожааааааалуйста Т_Т',
@@ -269,7 +269,7 @@ export const siteContent = {
     wordmarkBadge: '32',
     mastheadIssue: 'Полевой выпуск № 08/29',
     navStart: 'Определить маршрут',
-    navRoute: 'Мой маршрут',
+    navConfirm: 'Отметиться в стае',
     heroAlt: 'Компания нарядных птиц собирается на праздник',
     // подпись от руки на белом поле открытки
     coverCardCaption: 'бал перелётных птиц',
@@ -336,7 +336,6 @@ export const siteContent = {
     },
     finale: {
       topline: 'До встречи 29 августа',
-      city: 'Санкт-Петербург',
       routeLabel: 'Твой маршрут',
       routeDeclined: 'В этот раз без тебя',
       walkLabel: 'Прогулка с орнитологом',

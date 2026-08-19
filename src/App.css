@@ -633,9 +633,10 @@ h3 {
   }
 }
 
+/* z-index 1: крупинки летят позади открытки, иначе садятся на её тень */
 .cover-confetti {
   position: absolute;
-  z-index: 4;
+  z-index: 1;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
@@ -1328,18 +1329,6 @@ h3 {
   letter-spacing: 0.18em;
 }
 
-.choice-panel {
-  --panel-pad: clamp(18px, 2.2vw, 30px);
-  position: relative;
-  min-width: 0;
-  container-type: inline-size;
-  margin-top: 13px;
-  padding: clamp(26px, 2.6vw, 34px) var(--panel-pad) clamp(22px, 2.4vw, 30px);
-  border-top: 5px solid var(--lime);
-  background: var(--white);
-  box-shadow: 0 22px 44px -28px rgba(18, 19, 15, 0.55);
-}
-
 /* наклейка сидит на верхнем крае листа и заходит на лаймовую полосу */
 .panel-sticker {
   position: absolute;
@@ -1356,6 +1345,18 @@ h3 {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transform: rotate(-1.8deg);
+}
+
+.choice-panel {
+  --panel-pad: clamp(18px, 2.2vw, 30px);
+  position: relative;
+  min-width: 0;
+  container-type: inline-size;
+  margin-top: 13px;
+  padding: clamp(26px, 2.6vw, 34px) var(--panel-pad) clamp(22px, 2.4vw, 30px);
+  border-top: 5px solid var(--lime);
+  background: var(--white);
+  box-shadow: 0 22px 44px -28px rgba(18, 19, 15, 0.55);
 }
 
 .route-options {
@@ -3345,8 +3346,10 @@ h3 {
     line-height: 0.94;
   }
 
+  /* снизу оставлено место под плавающий тумблер звука: он налезал
+     на «Ждём тебя» в самом низу страницы */
   .finale {
-    padding: 58px 18px 28px;
+    padding: 58px 18px 84px;
   }
 
   .finale h2 {
@@ -3425,6 +3428,13 @@ h3 {
     display: none;
   }
 
+  /* бегущая строка — исключение: это не декоративный акцент, а способ подачи
+     информации, поэтому она едет даже при «Уменьшении движения» */
+  .flight-marquee-track {
+    animation-duration: 78s !important;
+    animation-iteration-count: infinite !important;
+  }
+
   .heart-nook svg {
     animation: none;
   }
@@ -3468,6 +3478,13 @@ h3 {
   transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
+/* область нажатия шире самой плашки: 31px по высоте мало для пальца */
+.bird-song::after {
+  position: absolute;
+  inset: -11px;
+  content: '';
+}
+
 .bird-song:hover {
   background: var(--lime);
 }
@@ -3509,11 +3526,11 @@ h3 {
 
 @media (max-width: 720px) {
   .bird-song {
-    bottom: 14px;
-    left: 14px;
-    gap: 6px;
-    padding: 7px 10px 6px;
-    font-size: 0.56rem;
+    bottom: 16px;
+    left: 16px;
+    gap: 7px;
+    padding: 10px 13px 9px;
+    font-size: 0.58rem;
     letter-spacing: 0.06em;
   }
 }

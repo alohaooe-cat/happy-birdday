@@ -488,13 +488,17 @@ function App() {
           HB<span>{ui.wordmarkBadge}</span>
         </button>
         <p>{ui.mastheadIssue}</p>
-        <a
-          className="masthead-link"
-          href={response ? '#personal' : '#test-intro'}
-          onClick={(event) => { event.preventDefault(); scrollTo(response ? 'personal' : 'test-intro') }}
-        >
-          {response ? ui.navRoute : ui.navStart} <ArrowRight size={16} aria-hidden="true" />
-        </a>
+        {/* ссылка ведёт к незакрытому действию: до теста — к тесту, после —
+            к перекличке. Когда ответ отправлен, вести уже некуда. */}
+        {!isConfirmed && (
+          <a
+            className="masthead-link"
+            href={response ? '#confirmation' : '#test-intro'}
+            onClick={(event) => { event.preventDefault(); scrollTo(response ? 'confirmation' : 'test-intro') }}
+          >
+            {response ? ui.navConfirm : ui.navStart} <ArrowRight size={16} aria-hidden="true" />
+          </a>
+        )}
       </header>
 
       <BirdSong />
@@ -1036,7 +1040,7 @@ function Finale({
             <span className="day-part">DAY</span>
           </span>
         </h2>
-        <p className="finale-subtitle">{siteContent.event.eventDate} {siteContent.event.year} · {ui.finale.city}</p>
+        <p className="finale-subtitle">{siteContent.event.eventDate} {siteContent.event.year}</p>
         <div className="final-summary">
           <div>
             <span>{ui.finale.routeLabel}</span>
