@@ -17,9 +17,12 @@ import {
   Sparkles,
   Sun,
   Users,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 import { BirdMark } from './BirdMark'
-import { siteContent } from './data/content'
+import { siteContent as rawContent } from './data/content'
+import { typoDeep } from './lib/typography'
 import { createResponseId, hasRemoteEndpoint, loadResponse, saveResponse, sendResponse } from './lib/storage'
 import type { Attendance, BirdType, Flock, GuestResponse, SaveStatus } from './types'
 import './App.css'
@@ -34,10 +37,107 @@ function plural(count: number, one: string, few: string, many: string) {
   return many
 }
 
+// Неразрывные пробелы после коротких предлогов ставятся один раз на старте:
+// в Google Sheet уходят только id и score, тексты туда не попадают.
+const siteContent = typoDeep(rawContent)
+
 const ui = siteContent.ui
+
+// Искра рядом с HAPPY: четырёхлучевая звезда с вогнутыми лучами.
+function Spark() {
+  return (
+    <svg className="spark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 0c2 6.4 5.6 10 12 12-6.4 2-10 5.6-12 12-2-6.4-5.6-10-12-12C6.4 10 10 6.4 12 0Z" />
+    </svg>
+  )
+}
+
+// Буквы заголовка приземляются по одной — каждой свой сдвиг старта.
+function letters(word: string, offset: number) {
+  return [...word].map((char, index) => (
+    <span className="ltr" key={index} style={{ animationDelay: `${0.5 + (offset + index) * 0.06}s` }}>
+      {char}
+    </span>
+  ))
+}
+
+// Конфетти заданы списком, а не случайными числами: раскладка не прыгает между рендерами.
+const CONFETTI = [
+  { left: 6, size: 7, round: true, color: 'var(--lime)', opacity: 0.7, duration: 19, delay: -3 },
+  { left: 14, size: 5, round: false, color: 'var(--coral)', opacity: 0.6, duration: 24, delay: -11 },
+  { left: 23, size: 9, round: true, color: 'var(--white)', opacity: 0.45, duration: 16, delay: -7 },
+  { left: 31, size: 6, round: false, color: 'var(--lime)', opacity: 0.55, duration: 27, delay: -18 },
+  { left: 39, size: 4, round: true, color: 'var(--coral)', opacity: 0.75, duration: 21, delay: -2 },
+  { left: 47, size: 8, round: false, color: 'var(--white)', opacity: 0.4, duration: 25, delay: -14 },
+  { left: 55, size: 5, round: true, color: 'var(--lime)', opacity: 0.65, duration: 18, delay: -9 },
+  { left: 62, size: 7, round: false, color: 'var(--coral)', opacity: 0.5, duration: 23, delay: -20 },
+  { left: 69, size: 4, round: true, color: 'var(--white)', opacity: 0.6, duration: 29, delay: -5 },
+  { left: 76, size: 9, round: false, color: 'var(--lime)', opacity: 0.45, duration: 17, delay: -13 },
+  { left: 83, size: 6, round: true, color: 'var(--coral)', opacity: 0.7, duration: 26, delay: -1 },
+  { left: 89, size: 5, round: false, color: 'var(--white)', opacity: 0.5, duration: 20, delay: -16 },
+  { left: 94, size: 8, round: true, color: 'var(--lime)', opacity: 0.55, duration: 22, delay: -8 },
+  { left: 2, size: 4, round: false, color: 'var(--coral)', opacity: 0.6, duration: 28, delay: -22 },
+]
 
 function asset(path: string) {
   return `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+}
+
+// Фоновая запись птичьих голосов. Никогда не включается сама — только по клику,
+// громкость выводится плавно, чтобы не пугать открывшего страницу.
+function BirdSong() {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const fadeRef = useRef(0)
+  const [playing, setPlaying] = useState(false)
+
+  useEffect(() => () => {
+    cancelAnimationFrame(fadeRef.current)
+    audioRef.current?.pause()
+  }, [])
+
+  const toggle = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    cancelAnimationFrame(fadeRef.current)
+
+    if (playing) {
+      audio.pause()
+      setPlaying(false)
+      return
+    }
+
+    audio.volume = 0
+    audio.play().then(() => {
+      setPlaying(true)
+      const started = performance.now()
+      const fade = (now: number) => {
+        const ratio = Math.min(1, (now - started) / 900)
+        audio.volume = ratio * 0.32
+        if (ratio < 1) fadeRef.current = requestAnimationFrame(fade)
+      }
+      fadeRef.current = requestAnimationFrame(fade)
+    }).catch(() => setPlaying(false))
+  }
+
+  return (
+    <>
+      <audio ref={audioRef} src={asset('/bird-song.mp3')} loop preload="none" />
+      <button
+        className={`bird-song ${playing ? 'is-playing' : ''}`}
+        type="button"
+        aria-pressed={playing}
+        aria-label={playing ? ui.soundPause : ui.soundPlay}
+        title={playing ? ui.soundPause : ui.soundPlay}
+        onClick={toggle}
+      >
+        {playing
+          ? <Volume2 size={16} strokeWidth={1.9} aria-hidden="true" />
+          : <VolumeX size={16} strokeWidth={1.9} aria-hidden="true" />}
+        <span className="bird-song-label" aria-hidden="true">{ui.soundLabel}</span>
+        {playing && <span className="bird-song-eq" aria-hidden="true"><i /><i /><i /></span>}
+      </button>
+    </>
+  )
 }
 
 function RichText({ text }: { text: string }) {
@@ -142,7 +242,6 @@ function App() {
       '.content-grid > *',
       '.quiz-shell > *',
       '.personal-result > *',
-      '.route-recommendation > *',
       '.plan-heading',
       '.route-list li',
       '.section-heading-row > *',
@@ -183,9 +282,35 @@ function App() {
     return () => observer.disconnect()
   }, [stage, response?.testResult])
 
+  // Параллакс обложки: каждый план смещается со своей скоростью.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!window.matchMedia('(hover: hover)').matches) return
+
+    const layers = Array.from(document.querySelectorAll<HTMLElement>('.cover .px'))
+    if (!layers.length) return
+
+    const onMove = (event: MouseEvent) => {
+      const x = event.clientX / window.innerWidth - 0.5
+      const y = event.clientY / window.innerHeight - 0.5
+      layers.forEach((layer) => {
+        const depth = Number(layer.dataset.depth) || 10
+        layer.style.translate = `${-x * depth}px ${-y * depth * 0.6}px`
+      })
+    }
+
+    window.addEventListener('mousemove', onMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      layers.forEach((layer) => { layer.style.translate = '' })
+    }
+  }, [])
+
   const currentQuestion = siteContent.questions[questionIndex]
   const currentAnswerId = quizAnswers[questionIndex]
-  const progress = ((questionIndex + 1) / siteContent.questions.length) * 100
+  // Счётчик считает отвеченные вопросы, а не открытые: до первого выбора он 0%.
+  const answeredCount = quizAnswers.filter((answer) => answer !== null).length
+  const progress = (answeredCount / siteContent.questions.length) * 100
 
   const calculatedResult = useMemo(() => {
     const score = siteContent.questions.reduce((sum, question, index) => {
@@ -288,10 +413,13 @@ function App() {
     }
   }
 
+  const dressPledgeRequired = attendance !== 'no'
+  const effectiveDressPledge = dressPledgeRequired && dressPledge
+
   const confirmRoute = async () => {
     if (!response || attendance === null) return
 
-    if (!dressPledge) {
+    if (dressPledgeRequired && !dressPledge) {
       setPledgeError(true)
       return
     }
@@ -305,7 +433,7 @@ function App() {
       ...response,
       selectedFlock: confirmedFlock,
       attendance,
-      dressPledge,
+      dressPledge: effectiveDressPledge,
       excursionConfirmed: attendance === 'walk',
       excursionPartySize: attendance === 'walk' ? Math.max(1, partySize) : 0,
       guestMessage: guestMessage.trim(),
@@ -342,7 +470,7 @@ function App() {
   const route = response ? siteContent.routes[response.testResult] : siteContent.routes.owl
   const isConfirmed = response?.attendance != null
     && response.attendance === attendance
-    && response.dressPledge === dressPledge
+    && response.dressPledge === effectiveDressPledge
     && (response.guestMessage ?? '') === guestMessage.trim()
     && (attendance !== 'walk' || response.excursionPartySize === Math.max(1, partySize))
 
@@ -369,41 +497,82 @@ function App() {
         </a>
       </header>
 
+      <BirdSong />
+
       <main id="main">
         <section className="cover" id="cover">
+          {/* задний план: пятно-эхо лаймового круга внутри иллюстрации и коралловый клин */}
+          <span className="cover-blob px" data-depth="14" aria-hidden="true" />
+          <span className="cover-wedge px" data-depth="6" aria-hidden="true" />
+          <span className="cover-halftone" aria-hidden="true" />
+
           <div className="cover-grid">
-            <div className="cover-copy">
-              <p className="eyebrow">{siteContent.event.coverLine}</p>
-              <h1 className="birdday-lockup" aria-label="Happy Birdday">
-                <span className="happy-word" aria-hidden="true">HAPPY</span>
+            <div className="cover-copy px" data-depth="10">
+              {/* дата — отдельный стикер над локапом, дублируется в aria-label h1 */}
+              <span className="cover-date" aria-hidden="true">{siteContent.event.coverLine}</span>
+              <h1 className="birdday-lockup" aria-label={`Happy Birdday. ${siteContent.event.coverLine}`}>
+                <span className="cover-tags" aria-hidden="true">
+                  <span className="happy-word">HAPPY<Spark /></span>
+                </span>
                 <span className="birdday-word" aria-hidden="true">
-                  <span className="bird-root">BIR<span className="correction-th">th</span></span>
-                  <span className="bird-letter">D</span>
-                  <span className="day-part">DAY</span>
+                  <span className="bird-root">{letters('BIR', 0)}</span>
+                  <span className="bird-letter">{letters('D', 3)}</span>
+                  <span className="day-part">{letters('DAY', 4)}</span>
                 </span>
               </h1>
               <Countdown />
+              <a className="cover-next" href="#test-intro">
+                {siteContent.event.coverScrollCue} <ArrowDown size={18} aria-hidden="true" />
+              </a>
+              <Feather className="cover-feather px" data-depth="30" size={104} strokeWidth={1.3} aria-hidden="true" />
             </div>
 
-            <div className="bird-scene">
-              <img
-                className="hero-birds"
-                src={asset('/hero-bird-friends.webp')}
-                alt={ui.heroAlt}
-                fetchPriority="high"
-              />
+            <div className="bird-scene px" data-depth="22">
+              {/* вторая карточка выглядывает сзади — сразу даёт глубину */}
+              <span className="scene-back" aria-hidden="true" />
+              <div className="scene-card">
+                <img
+                  className="hero-birds"
+                  src={asset('/hero-bird-friends.webp')}
+                  alt={ui.heroAlt}
+                  fetchPriority="high"
+                />
+                <span className="scene-caption" aria-hidden="true">{ui.coverCardCaption}</span>
+              </div>
+              {/* передний план: птица вылетает за рамку открытки */}
+              <Bird className="scene-escapee" size={116} strokeWidth={1.5} aria-hidden="true" />
             </div>
           </div>
-          <a className="cover-next" href="#test-intro">
-            {siteContent.event.coverScrollCue} <ArrowDown size={18} aria-hidden="true" />
-          </a>
+
+          <Bird className="cover-flyby" size={64} strokeWidth={1.6} aria-hidden="true" />
+
+          <div className="cover-confetti" aria-hidden="true">
+            {CONFETTI.map((bit, index) => (
+              <i
+                key={index}
+                style={{
+                  left: `${bit.left}%`,
+                  width: `${bit.size}px`,
+                  height: `${bit.size * (bit.round ? 1 : 1.7)}px`,
+                  background: bit.color,
+                  borderRadius: bit.round ? '50%' : '0',
+                  opacity: bit.opacity,
+                  animationDuration: `${bit.duration}s`,
+                  animationDelay: `${bit.delay}s`,
+                }}
+              />
+            ))}
+          </div>
+
+          <span className="cover-frame" aria-hidden="true" />
+          <span className="cover-grain" aria-hidden="true" />
         </section>
 
         <div className="flight-marquee" aria-hidden="true">
           <div className="flight-marquee-track">
             {[0, 1].map((group) => (
               <div className="flight-marquee-group" key={group}>
-                {[0, 1, 2].map((pass) => ui.marquee.map((word) => (
+                {[0, 1, 2, 3, 4].map((pass) => ui.marquee.map((word) => (
                   <span key={`${pass}-${word}`}>{word}<i>✦</i></span>
                 )))}
               </div>
@@ -466,12 +635,15 @@ function App() {
                 </>
               ) : (
                 <form className="name-form" onSubmit={submitName}>
-                  <Bird size={44} strokeWidth={1.4} aria-hidden="true" />
-                  <p className="eyebrow">{ui.name.eyebrow}</p>
+                  <div className="name-kicker">
+                    <Bird size={38} strokeWidth={1.5} aria-hidden="true" />
+                    <p className="eyebrow">{ui.name.eyebrow}</p>
+                  </div>
                   <h2>{ui.name.title}</h2>
-                  <p>{ui.name.hint}</p>
-                  <label htmlFor="guest-name">{ui.name.label}</label>
-                  <input
+                  <p className="name-hint">{ui.name.hint}</p>
+                  <div className="name-field">
+                    <label htmlFor="guest-name">{ui.name.label}</label>
+                    <input
                     id="guest-name"
                     name="guest-name"
                     value={guestName}
@@ -481,7 +653,8 @@ function App() {
                     required
                     maxLength={80}
                     placeholder={ui.name.placeholder}
-                  />
+                    />
+                  </div>
                   <div className="quiz-actions">
                     <button className="button button-ghost" type="button" onClick={() => setStage('quiz')}>
                       <ArrowLeft size={18} aria-hidden="true" /> {ui.name.back}
@@ -509,24 +682,21 @@ function App() {
                   <p className="result-text"><RichText text={result.description} /></p>
                 </div>
               </div>
-
-              <div className="route-recommendation">
-                <span>{ui.result.recommended}</span>
-                <strong>{result.recommendationTitle}</strong>
-                <p>{result.recommendationText}</p>
-                {selectedFlock !== result.defaultRoute && <em>{ui.result.keptOriginal}</em>}
-              </div>
             </section>
 
             <section className="personal-plan" aria-labelledby="plan-title">
               <div className="plan-heading">
-                <p className="eyebrow">{ui.result.planEyebrow}</p>
+                <p className="eyebrow">{ui.result.recommended}</p>
                 <h2 id="plan-title">{route.label}</h2>
+                <p className="plan-lead">{result.recommendationText}</p>
+                {selectedFlock !== result.defaultRoute && (
+                  <em className="plan-kept">{ui.result.keptOriginal}</em>
+                )}
               </div>
               <ol className="route-list">
-                {route.items.map((item, index) => (
+                {route.items.map((item) => (
                   <li key={item}>
-                    <span>0{index + 1}</span>
+                    <span className="list-mark" aria-hidden="true"><Feather size={19} strokeWidth={1.7} /></span>
                     <p><RichText text={item} /></p>
                   </li>
                 ))}
@@ -545,6 +715,7 @@ function App() {
                 <p className="section-lead">{siteContent.confirmation.lead}</p>
               </div>
               <div className="choice-panel">
+                <span className="panel-sticker" aria-hidden="true">{siteContent.confirmation.panelSticker}</span>
                 <div className="route-options" role="group" aria-label="Участие в прогулке с орнитологом">
                   {siteContent.confirmation.options.map((option) => (
                     <button
@@ -552,7 +723,10 @@ function App() {
                       className={`choice-button ${attendance === option.value ? 'is-selected' : ''} ${option.value === 'no' ? 'is-decline' : ''}`}
                       type="button"
                       aria-pressed={attendance === option.value}
-                      onClick={() => setAttendance(option.value)}
+                      onClick={() => {
+                        setAttendance(option.value)
+                        if (option.value === 'no') setPledgeError(false)
+                      }}
                     >
                       <Check size={20} aria-hidden="true" />
                       <span className="choice-hint">{option.hint}</span>
@@ -561,7 +735,8 @@ function App() {
                   ))}
                 </div>
 
-                {attendance === 'walk' && (
+                <div className="panel-row">
+                  {attendance === 'walk' && (
                   <div className="party-size">
                     <div>
                       <label htmlFor="party-size">{siteContent.confirmation.partyLabel}</label>
@@ -585,13 +760,14 @@ function App() {
                       </button>
                     </div>
                   </div>
-                )}
+                  )}
 
-                <div className={`dress-pledge ${pledgeError ? 'has-error' : ''}`}>
+                <div className={`dress-pledge ${pledgeError ? 'has-error' : ''} ${dressPledgeRequired ? '' : 'is-muted'}`}>
                   <label>
                     <input
                       type="checkbox"
-                      checked={dressPledge}
+                      disabled={!dressPledgeRequired}
+                      checked={effectiveDressPledge}
                       onChange={(event) => {
                         setDressPledge(event.target.checked)
                         if (event.target.checked) setPledgeError(false)
@@ -607,14 +783,17 @@ function App() {
                     <p className="pledge-error" role="alert">{siteContent.confirmation.dressPledgeError}</p>
                   )}
                 </div>
+                </div>
 
                 <div className="guest-message">
-                  <label htmlFor="guest-message">{siteContent.confirmation.messageLabel}</label>
-                  <p>{siteContent.confirmation.messageHint}</p>
+                  <div className="field-head">
+                    <label htmlFor="guest-message">{siteContent.confirmation.messageLabel}</label>
+                    <p>{siteContent.confirmation.messageHint}</p>
+                  </div>
                   <textarea
                     id="guest-message"
                     name="guest-message"
-                    rows={4}
+                    rows={2}
                     maxLength={500}
                     value={guestMessage}
                     onChange={(event) => setGuestMessage(event.target.value)}
@@ -699,12 +878,11 @@ function CommonSections() {
             <p className="eyebrow">{ui.dayPlan.eyebrow}</p>
             <h2 id="day-plan-title">{ui.dayPlan.title}</h2>
           </div>
-          <p className="day-note">{ui.dayPlan.note}</p>
         </div>
         <ol className="day-timeline">
-          {siteContent.dayPlan.map((item, index) => (
+          {siteContent.dayPlan.map((item) => (
             <li key={item.title}>
-              <span className="timeline-index">0{index + 1}</span>
+              <span className="timeline-index" aria-hidden="true"><Feather size={22} strokeWidth={1.8} /></span>
               <div className="timeline-title">
                 <h3>{item.title}</h3>
                 {'time' in item && <time>{item.time}</time>}
@@ -742,7 +920,12 @@ function CommonSections() {
                 <h3>{scenario.title}</h3>
               </div>
               <ol>
-                {scenario.items.map((item) => <li key={item}>{item}</li>)}
+                {scenario.items.map((item) => (
+                  <li key={item}>
+                    <span className="list-mark" aria-hidden="true"><Feather size={16} strokeWidth={1.8} /></span>
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ol>
             </article>
           ))}
@@ -756,9 +939,11 @@ function CommonSections() {
 
       <section className="dress-code" id="dress-code" aria-labelledby="dress-code-title">
         <div className="dress-copy">
-          <Feather size={40} strokeWidth={1.3} aria-hidden="true" />
-          <p className="eyebrow">{ui.dressEyebrow}</p>
-          <h2 id="dress-code-title">{siteContent.dressCode.title}</h2>
+          <div className="dress-heading">
+            <Feather size={40} strokeWidth={1.3} aria-hidden="true" />
+            <p className="eyebrow">{ui.dressEyebrow}</p>
+            <h2 id="dress-code-title">{siteContent.dressCode.title}</h2>
+          </div>
           <div className="dress-details">
             <p>{siteContent.dressCode.text}</p>
           </div>
@@ -788,6 +973,13 @@ function CommonSections() {
 
             </a>
           ))}
+          {/* выемка сердца: перья сыпятся в ложбинку между долями.
+              Стоит последним ребёнком, чтобы не сбить nth-child у карточек. */}
+          <span className="heart-nook" aria-hidden="true">
+            <Feather size={54} strokeWidth={1.35} />
+            <Feather size={41} strokeWidth={1.5} />
+            <Feather size={30} strokeWidth={1.7} />
+          </span>
         </div>
       </section>
 
@@ -802,8 +994,11 @@ function CommonSections() {
           </a>
         </div>
         <ol className="gift-steps">
-          {siteContent.gifts.instructions.map((item, index) => (
-            <li key={item}><span>0{index + 1}</span><p>{item}</p></li>
+          {siteContent.gifts.instructions.map((item) => (
+            <li key={item}>
+              <span className="list-mark" aria-hidden="true"><Feather size={19} strokeWidth={1.7} /></span>
+              <p>{item}</p>
+            </li>
           ))}
         </ol>
       </section>
@@ -831,9 +1026,9 @@ function Finale({
       <footer className="finale">
         <div className="finale-topline"><Sparkles size={22} aria-hidden="true" /><span>{ui.finale.topline}</span></div>
         <h2 className="birdday-lockup" aria-label="Happy Birdday">
-          <span className="happy-word" aria-hidden="true">HAPPY</span>
+          <span className="happy-word" aria-hidden="true">HAPPY<Spark /></span>
           <span className="birdday-word" aria-hidden="true">
-            <span className="bird-root">BIR<span className="correction-th">th</span></span>
+            <span className="bird-root">BIR</span>
             <span className="bird-letter">D</span>
             <span className="day-part">DAY</span>
           </span>

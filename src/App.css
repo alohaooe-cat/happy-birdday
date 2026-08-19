@@ -4,6 +4,8 @@
   --white: #fffdf6;
   --coral: #ff6249;
   --blue: #3048ee;
+  --blue-lift: #4a5cff;
+  --blue-deep: #2334b8;
   --lime: #d8f154;
   --violet: #8d61e8;
   --violet-deep: #8557e2;
@@ -22,7 +24,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 72px;
+  scroll-padding-top: 58px;
 }
 
 body {
@@ -128,7 +130,7 @@ h3 {
   z-index: 20;
   top: 0;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   min-height: 58px;
   padding: 8px clamp(16px, 4vw, 64px);
@@ -141,6 +143,7 @@ h3 {
 
 .wordmark {
   display: inline-flex;
+  justify-self: start;
   align-items: baseline;
   gap: 5px;
   padding: 0;
@@ -173,6 +176,7 @@ h3 {
 
 .masthead-link {
   display: inline-flex;
+  justify-self: end;
   align-items: center;
   gap: 7px;
   font-family: var(--display);
@@ -197,31 +201,144 @@ h3 {
   display: flex;
   min-height: min(calc(100svh - 58px), 880px);
   flex-direction: column;
-  padding: clamp(28px, 5vw, 76px) clamp(16px, 4vw, 64px) 24px;
+  padding: clamp(38px, 4vw, 62px) clamp(32px, 4.2vw, 68px) clamp(34px, 3vw, 40px);
   overflow: hidden;
+  isolation: isolate;
   color: var(--white);
-  background: var(--blue);
+  background: radial-gradient(120% 100% at 68% 34%, var(--blue-lift) 0%, var(--blue) 44%, var(--blue-deep) 100%);
 }
 
-.cover::before {
+/* Рамка замкнута по периметру — раньше читалась обрезками. Лаймовая засечка
+   сверху делает вырез приёмом, а не браком. Лежит под открыткой: фото на неё заходит. */
+.cover-frame {
   position: absolute;
-  inset: 0;
-  border: clamp(8px, 1.3vw, 18px) solid var(--coral);
-  clip-path: polygon(0 0, 41% 0, 41% 9%, 100% 9%, 100% 100%, 67% 100%, 67% 91%, 0 91%);
-  content: '';
+  z-index: 0;
+  inset: clamp(9px, 1vw, 15px);
+  border: clamp(7px, 0.85vw, 12px) solid var(--coral);
   pointer-events: none;
+}
+
+.cover-frame::after {
+  position: absolute;
+  top: calc(-1 * clamp(7px, 0.85vw, 12px));
+  right: 13%;
+  width: clamp(52px, 6vw, 88px);
+  height: clamp(7px, 0.85vw, 12px);
+  background: var(--lime);
+  content: '';
+}
+
+/* ---- задний план ---- */
+.cover-blob {
+  position: absolute;
+  z-index: 0;
+  top: 44%;
+  right: -20vw;
+  width: min(56vw, 780px);
+  aspect-ratio: 1;
+  background: var(--lime);
+  border-radius: 62% 38% 55% 45% / 48% 58% 42% 52%;
+  opacity: 0.9;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(-8deg);
+  animation: blob-in 1.1s cubic-bezier(0.2, 0.9, 0.2, 1) 120ms both;
+}
+
+.cover-wedge {
+  position: absolute;
+  z-index: 0;
+  bottom: -8%;
+  left: -10%;
+  width: 108%;
+  height: 58%;
+  background: var(--coral);
+  clip-path: polygon(0 46%, 100% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+  animation: wedge-in 1s cubic-bezier(0.2, 0.9, 0.2, 1) 260ms both;
+}
+
+.cover-halftone {
+  position: absolute;
+  z-index: 0;
+  bottom: -40px;
+  left: -40px;
+  width: 46vw;
+  height: 46vw;
+  background-image: radial-gradient(var(--lime) 1.6px, transparent 1.7px);
+  background-size: 13px 13px;
+  mask-image: radial-gradient(circle at 0% 100%, #000 0%, transparent 68%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* зерно поверх всего — главное лекарство от плоскости */
+.cover-grain {
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.26;
+  pointer-events: none;
+}
+
+@keyframes blob-in {
+  from { transform: translateY(-50%) rotate(-8deg) scale(0.4); }
+}
+
+@keyframes wedge-in {
+  from { transform: translateY(60%); }
 }
 
 .cover-grid {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(28px, 4vw, 72px);
+  gap: clamp(24px, 3vw, 54px);
   flex: 1;
+  width: min(100%, 1400px);
   min-height: 0;
+  margin-inline: auto;
   padding-bottom: clamp(14px, 1.6vw, 24px);
+}
+
+.cover-tags {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.129em;
+  margin-left: clamp(6px, 1.6vw, 28px);
+}
+
+/* отдельный стикер над локапом: своя строка, свой наклон */
+.cover-date {
+  position: relative;
+  z-index: 4;
+  display: inline-block;
+  margin-bottom: clamp(10px, 1.5vw, 22px);
+  margin-left: clamp(4px, 1.2vw, 22px);
+  padding: 7px 15px 6px;
+  color: var(--ink);
+  background: var(--lime);
+  box-shadow: 5px 5px 0 var(--ink);
+  font-family: var(--display);
+  font-size: clamp(0.6rem, 0.82vw, 0.82rem);
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  transform: rotate(-2.4deg);
+  white-space: nowrap;
+}
+
+.spark {
+  width: 0.78em;
+  height: 0.78em;
+  margin-left: 0.24em;
+  fill: var(--lime);
 }
 
 .eyebrow {
@@ -241,7 +358,7 @@ h3 {
   max-width: 100%;
   margin-bottom: 30px;
   font-family: var(--display);
-  font-size: clamp(4rem, 10.8vw, 10rem);
+  font-size: clamp(4rem, 11.6vw, 11.5rem);
   font-variation-settings: "wght" 850;
   line-height: 0.72;
 }
@@ -252,27 +369,17 @@ h3 {
   display: flex;
   width: max-content;
   align-items: center;
-  gap: 0.75em;
-  margin: 0 0 0.62em 0.08em;
-  padding: 0.42em 0.62em 0.36em;
+  padding: 0.42em 0.6em 0.36em;
   color: var(--ink);
   background: var(--coral);
-  box-shadow: 0.11em 0.11em 0 var(--ink);
+  box-shadow: 0.1em 0.1em 0 var(--ink);
   font-family: var(--display);
-  font-size: 0.25em;
+  font-size: 0.26em;
   font-variation-settings: "wght" 820;
   letter-spacing: 0.13em;
   line-height: 1;
-  transform: rotate(-1.3deg);
+  transform: rotate(-1.4deg);
   white-space: nowrap;
-}
-
-.happy-word::after {
-  color: var(--lime);
-  content: '✦';
-  font-family: var(--sans);
-  font-size: 0.9em;
-  line-height: 1;
 }
 
 .birdday-word {
@@ -296,39 +403,27 @@ h3 {
   display: inline-block;
 }
 
-.correction-th {
-  position: absolute;
-  z-index: 3;
-  top: -0.58em;
-  right: -0.62em;
-  color: var(--white);
-  font-family: var(--sans);
-  font-size: 0.29em;
-  font-style: normal;
-  font-variation-settings: "wght" 850;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  text-transform: lowercase;
-  transform: rotate(-9deg);
-}
-
-.correction-th::after {
-  position: absolute;
-  top: 46%;
-  right: -0.16em;
-  left: -0.16em;
-  height: 0.1em;
-  background: var(--coral);
-  content: '';
-  transform: rotate(-8deg);
-}
-
 .cover .happy-word {
   color: var(--ink);
 }
 
 .cover .birdday-word {
-  text-shadow: 5px 5px 0 rgba(18, 19, 15, 0.16);
+  text-shadow: 0.05em 0.05em 0 var(--coral);
+}
+
+/* буквы приземляются по одной */
+.ltr {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(-140%) rotate(-9deg);
+  animation: letter-drop 0.72s cubic-bezier(0.18, 1.2, 0.3, 1) both;
+}
+
+@keyframes letter-drop {
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .cover .day-part {
@@ -336,17 +431,112 @@ h3 {
 }
 
 .bird-scene {
+  --pin: clamp(23px, 2.3vw, 34px);
   position: relative;
+  z-index: 3;
+  justify-self: end;
+  width: auto;
+  max-width: 100%;
+  height: min(650px, calc(100svh - 58px - 10.5rem));
   aspect-ratio: 4 / 5;
-  max-height: 650px;
+}
+
+.scene-card {
+  position: relative;
+  z-index: 3;
+  height: 100%;
   padding: clamp(10px, 1.5vw, 20px) clamp(10px, 1.5vw, 20px) clamp(30px, 4.4vw, 58px);
-  border-radius: 4px;
+  border-radius: 3px;
   background: var(--white);
   box-shadow:
     0 0 0 1px rgba(18, 19, 15, 0.28),
-    14px 14px 0 rgba(18, 19, 15, 0.24);
-  transform: rotate(1.6deg);
+    26px 30px 0 rgba(18, 19, 15, 0.3);
+  transform: rotate(-3.6deg);
   animation: poster-arrive 900ms 140ms cubic-bezier(0.18, 0.8, 0.18, 1) both;
+}
+
+/* вторая карточка выглядывает сзади */
+.scene-back {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 3px;
+  background: var(--paper);
+  box-shadow: 14px 16px 0 rgba(18, 19, 15, 0.2);
+  transform: rotate(5.2deg) translate(16px, 10px);
+  animation: poster-arrive 900ms 60ms cubic-bezier(0.18, 0.8, 0.18, 1) both;
+}
+
+/* Канцелярская кнопка: открытка приколота к стене. Контр-поворот на -1.6deg
+   гасит наклон открытки, чтобы кнопка стояла вертикально. */
+.scene-card::before,
+.scene-card::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+}
+
+/* игла с воротничком — уходит под шляпку. Продольный блик по левой грани
+   и потемнение справа дают цилиндр, а не плоский треугольник. */
+.scene-card::after {
+  z-index: 3;
+  top: calc(var(--pin) * 0.34);
+  left: calc(var(--pin) * 0.53);
+  width: calc(var(--pin) * 0.3);
+  height: calc(var(--pin) * 0.66);
+  background: linear-gradient(
+    100deg,
+    #5c626f 0 14%,
+    #9aa1ad 26%,
+    #eef1f6 42%,
+    #b6bcc7 58%,
+    #767d8a 78%,
+    #434853 100%
+  );
+  clip-path: polygon(14% 0, 86% 0, 68% 58%, 50% 100%, 32% 58%);
+  filter: drop-shadow(1px 2px 1px rgba(18, 19, 15, 0.42));
+  transform: rotate(3.6deg);
+}
+
+/* шляпка: сфера. Тугой глянцевый блик слева сверху, тёмный терминатор
+   к нижнему правому краю, отражённый свет от открытки по низу. */
+.scene-card::before {
+  z-index: 4;
+  top: calc(var(--pin) * -0.42);
+  left: calc(var(--pin) * 0.2);
+  width: var(--pin);
+  height: var(--pin);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 31% 24%, rgba(255, 255, 255, 0.98) 0 9%, rgba(255, 255, 255, 0.55) 18%, rgba(255, 255, 255, 0) 34%),
+    radial-gradient(circle at 74% 84%, rgba(255, 186, 158, 0.6) 0 8%, rgba(255, 186, 158, 0) 32%),
+    radial-gradient(circle at 36% 29%, #ff9078 0 22%, #f9583d 52%, #bd2f18 82%, #7f1d0d 100%);
+  box-shadow:
+    inset 0 calc(var(--pin) * -0.07) calc(var(--pin) * 0.12) rgba(92, 21, 8, 0.6),
+    inset 0 calc(var(--pin) * 0.04) calc(var(--pin) * 0.06) rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px rgba(78, 18, 7, 0.55),
+    calc(var(--pin) * 0.07) calc(var(--pin) * 0.1) 0 rgba(18, 19, 15, 0.24),
+    calc(var(--pin) * 0.12) calc(var(--pin) * 0.2) calc(var(--pin) * 0.3) rgba(18, 19, 15, 0.45);
+  transform: rotate(3.6deg);
+  transform-origin: 50% 0;
+  animation: pin-wobble 5.5s ease-in-out 1.6s infinite;
+}
+
+@keyframes pin-wobble {
+  0%, 100% { transform: rotate(3.6deg); }
+  25% { transform: rotate(6.2deg); }
+  75% { transform: rotate(1.2deg); }
+}
+
+.scene-caption {
+  position: absolute;
+  z-index: 4;
+  bottom: clamp(9px, 1.3vw, 18px);
+  left: clamp(16px, 2vw, 26px);
+  color: rgba(18, 19, 15, 0.42);
+  font-family: var(--serif);
+  font-size: clamp(0.82rem, 1.15vw, 1.15rem);
+  font-style: italic;
 }
 
 .hero-birds {
@@ -360,18 +550,122 @@ h3 {
   transition: transform 500ms cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
-.bird-scene:hover .hero-birds {
+.scene-card:hover .hero-birds {
   transform: scale(1.018);
+}
+
+.scene-escapee {
+  position: absolute;
+  z-index: 8;
+  bottom: -9%;
+  left: -23%;
+  width: clamp(78px, 8vw, 120px);
+  height: auto;
+  color: var(--white);
+  filter: drop-shadow(7px 9px 0 rgba(18, 19, 15, 0.3));
+  transform: rotate(-16deg);
+  animation: escape 1s cubic-bezier(0.2, 1.1, 0.3, 1) 1.05s both;
+}
+
+@keyframes escape {
+  from {
+    opacity: 0;
+    transform: translate(78px, 34px) rotate(6deg) scale(0.6);
+  }
+}
+
+/* перо падает в пустую синеву над локапом: правее плашки HAPPY, выше букв,
+   левее открытки — и в противоположном углу от вылетающей птицы.
+   Ниже 880px этот карман исчезает, там перо скрывается. */
+.cover-feather {
+  position: absolute;
+  z-index: 5;
+  top: -10%;
+  right: 10%;
+  width: clamp(58px, 6vw, 96px);
+  height: auto;
+  color: var(--lime);
+  filter: drop-shadow(3px 4px 0 rgba(18, 19, 15, 0.28));
+  pointer-events: none;
+  animation:
+    feather-fall 1.3s cubic-bezier(0.3, 0.8, 0.3, 1) 1.35s both,
+    feather-sway 6s ease-in-out 2.7s infinite;
+}
+
+@media (max-width: 880px) {
+  .cover-feather {
+    display: none;
+  }
+}
+
+@keyframes feather-fall {
+  from {
+    opacity: 0;
+    transform: translateY(-220px) rotate(-40deg);
+  }
+  to {
+    transform: rotate(24deg);
+  }
+}
+
+@keyframes feather-sway {
+  0%, 100% { transform: rotate(24deg); }
+  50% { transform: rotate(17deg) translateY(-7px); }
+}
+
+.cover-flyby {
+  position: absolute;
+  z-index: 9;
+  top: 15%;
+  left: -140px;
+  color: var(--lime);
+  pointer-events: none;
+  animation: flyby 6.5s cubic-bezier(0.4, 0, 0.6, 1) 1.9s both;
+}
+
+@keyframes flyby {
+  0% { transform: translate(0, 0) rotate(4deg); }
+  25% { transform: translate(30vw, -4vh) rotate(-3deg); }
+  55% { transform: translate(58vw, 5vh) rotate(5deg); }
+  100% {
+    opacity: 0;
+    transform: translate(124vw, -9vh) rotate(-4deg);
+  }
+}
+
+.cover-confetti {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cover-confetti i {
+  position: absolute;
+  display: block;
+  animation: confetti-drift linear infinite;
+}
+
+@keyframes confetti-drift {
+  from { transform: translateY(-12vh) rotate(0); }
+  to { transform: translateY(112vh) rotate(420deg); }
+}
+
+.px {
+  will-change: transform;
+  transition: translate 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .cover-next {
   position: relative;
-  z-index: 2;
+  z-index: 8;
   display: inline-flex;
   flex: 0 0 auto;
   align-self: start;
   align-items: center;
   gap: 10px;
+  margin-top: clamp(18px, 2.4vw, 34px);
   padding: 10px 0 8px;
   border-bottom: 1px solid currentColor;
   font-size: 0.78rem;
@@ -402,7 +696,7 @@ h3 {
 
 .countdown-units {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, clamp(64px, 7.4vw, 92px)));
+  grid-template-columns: repeat(4, minmax(0, clamp(78px, 7.4vw, 92px)));
   gap: clamp(7px, 1vw, 13px);
   margin: 0;
   padding: 0;
@@ -421,8 +715,8 @@ h3 {
   text-align: center;
 }
 
+/* все плитки кремовые, коралловая только у секунд — глаз сразу видит живой счёт */
 .countdown-units li:nth-child(2) {
-  background: var(--lime);
   transform: rotate(1.4deg);
 }
 
@@ -449,7 +743,7 @@ h3 {
   font-family: var(--display);
   font-size: 0.55rem;
   font-weight: 800;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -462,6 +756,7 @@ h3 {
 }
 
 .cover-copy {
+  position: relative;
   animation: title-arrive 780ms cubic-bezier(0.18, 0.8, 0.18, 1) both;
 }
 
@@ -478,14 +773,15 @@ h3 {
 .flight-marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee-flight 14s linear infinite;
+  animation: marquee-flight 78s linear infinite;
 }
 
 .flight-marquee-group {
+  --marquee-gap: 24px;
   display: flex;
   flex: none;
   align-items: center;
-  gap: 24px;
+  gap: var(--marquee-gap);
   padding: 13px 12px;
   font-family: var(--display);
   font-size: clamp(0.68rem, 1vw, 0.84rem);
@@ -496,6 +792,7 @@ h3 {
 }
 
 .flight-marquee-group i {
+  margin-left: var(--marquee-gap);
   color: var(--coral);
   font-family: var(--sans);
   font-size: 1.05rem;
@@ -624,16 +921,18 @@ h3 {
 }
 
 .quiz-section {
-  padding: clamp(46px, 7vw, 90px) clamp(16px, 7vw, 110px);
+  display: grid;
+  min-height: calc(100svh - 58px);
+  align-content: center;
+  padding: clamp(28px, 4vw, 56px) clamp(16px, 7vw, 110px);
   color: var(--white);
   background: var(--violet);
 }
 
 .quiz-shell {
   width: min(920px, 100%);
-  min-height: 580px;
   margin: 0 auto;
-  padding: clamp(24px, 5vw, 60px);
+  padding: clamp(20px, 3vw, 40px);
   border: 1px solid var(--white);
   background: var(--blue);
   box-shadow: 16px 16px 0 var(--lime);
@@ -657,7 +956,7 @@ h3 {
 
 .progress-track {
   height: 5px;
-  margin-bottom: clamp(34px, 5vw, 56px);
+  margin-bottom: clamp(20px, 2.4vw, 32px);
   background: rgba(255, 253, 246, 0.25);
 }
 
@@ -676,10 +975,10 @@ h3 {
 }
 
 .question-fieldset legend {
-  max-width: 22ch;
-  margin-bottom: clamp(20px, 2.6vw, 34px);
+  max-width: 24ch;
+  margin-bottom: clamp(14px, 1.8vw, 24px);
   font-family: var(--serif);
-  font-size: clamp(2rem, 3.4vw, 3.2rem);
+  font-size: clamp(1.8rem, 2.9vw, 2.7rem);
   letter-spacing: -0.045em;
   line-height: 1.02;
 }
@@ -696,8 +995,8 @@ h3 {
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto;
   gap: 12px;
-  min-height: 128px;
-  padding: 16px;
+  min-height: 104px;
+  padding: 14px;
   border: 1px solid rgba(255, 253, 246, 0.66);
   color: var(--white);
   background: transparent;
@@ -742,49 +1041,63 @@ h3 {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 34px;
+  margin-top: 24px;
 }
 
 .name-form {
   display: flex;
   width: min(600px, 100%);
-  min-height: 470px;
   margin: 0 auto;
   flex-direction: column;
-  justify-content: center;
 }
 
-.name-form > svg {
+.name-kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: clamp(22px, 2.6vw, 34px);
+}
+
+.name-kicker > svg {
   flex: 0 0 auto;
-  align-self: start;
-  margin-bottom: 18px;
+}
+
+.name-kicker .eyebrow {
+  margin-bottom: 0;
 }
 
 .name-form h2 {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-family: var(--serif);
-  font-size: clamp(2.8rem, 7vw, 5.8rem);
+  font-size: clamp(2.6rem, 5.6vw, 4.6rem);
   font-weight: 500;
   letter-spacing: -0.06em;
   line-height: 0.95;
 }
 
-.name-form > p:not(.eyebrow) {
-  margin-bottom: 30px;
+.name-hint {
+  max-width: 42ch;
+  margin-bottom: clamp(30px, 4vw, 48px);
+  opacity: 0.74;
+}
+
+.name-field {
+  display: grid;
 }
 
 .name-form label {
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   font-family: var(--display);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  opacity: 0.7;
 }
 
 .name-form input {
   width: 100%;
-  padding: 16px 0;
+  padding: 13px 0;
   border: 0;
   border-bottom: 2px solid var(--white);
   border-radius: 0;
@@ -794,8 +1107,18 @@ h3 {
   font-size: clamp(1.25rem, 2.2vw, 1.75rem);
 }
 
+.name-form input:focus-visible {
+  border-bottom-color: var(--lime);
+  outline: none;
+  box-shadow: 0 10px 20px -16px var(--lime);
+}
+
 .name-form input::placeholder {
   color: rgba(255, 253, 246, 0.5);
+}
+
+.name-form .quiz-actions {
+  margin-top: clamp(26px, 3vw, 40px);
 }
 
 .name-form .button-primary {
@@ -837,8 +1160,17 @@ h3 {
 .personal-result {
   display: grid;
   grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1.5fr);
+  min-width: 0;
   gap: clamp(32px, 6vw, 100px);
   padding: clamp(60px, 10vw, 150px) clamp(18px, 8vw, 130px) clamp(42px, 7vw, 90px);
+}
+
+.personal-result > div {
+  min-width: 0;
+}
+
+.personal .eyebrow {
+  overflow-wrap: break-word;
 }
 
 .result-mark {
@@ -957,48 +1289,6 @@ h3 {
   text-transform: uppercase;
 }
 
-.route-recommendation {
-  display: grid;
-  grid-template-columns: minmax(0, 0.6fr) minmax(0, 1fr) minmax(0, 1.2fr);
-  align-items: start;
-  gap: 22px clamp(22px, 3vw, 44px);
-  padding: 30px clamp(18px, 8vw, 130px);
-  border-top: 2px solid var(--ink);
-  color: var(--ink);
-  background: var(--white);
-}
-
-.route-recommendation > span {
-  padding-top: 0.5rem;
-  color: var(--coral);
-  font-family: var(--display);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.route-recommendation strong {
-  color: var(--blue);
-  font-family: var(--serif);
-  font-size: 1.75rem;
-  font-style: italic;
-  line-height: 1.1;
-}
-
-.route-recommendation p,
-.route-recommendation em {
-  margin: 0;
-  padding-top: 0.3rem;
-  font-size: 0.98rem;
-  line-height: 1.5;
-}
-
-.route-recommendation em {
-  grid-column: 2 / -1;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
 
 .confirmation {
   position: relative;
@@ -1039,60 +1329,64 @@ h3 {
 }
 
 .choice-panel {
+  --panel-pad: clamp(18px, 2.2vw, 30px);
   position: relative;
   min-width: 0;
-  padding: clamp(22px, 3vw, 38px);
-  border: 1px solid var(--ink);
+  container-type: inline-size;
+  margin-top: 13px;
+  padding: clamp(26px, 2.6vw, 34px) var(--panel-pad) clamp(22px, 2.4vw, 30px);
+  border-top: 5px solid var(--lime);
   background: var(--white);
-  box-shadow: 14px 14px 0 var(--ink);
-  transform: rotate(-0.5deg);
+  box-shadow: 0 22px 44px -28px rgba(18, 19, 15, 0.55);
 }
 
-.choice-panel::before {
+/* наклейка сидит на верхнем крае листа и заходит на лаймовую полосу */
+.panel-sticker {
   position: absolute;
+  z-index: 3;
   top: -13px;
-  left: clamp(24px, 6%, 60px);
-  padding: 5px 16px 4px;
-  border: 1px solid var(--ink);
-  color: var(--ink);
-  background: var(--coral);
-  content: 'бланк наблюдателя';
+  left: clamp(14px, 2vw, 26px);
+  padding: 6px 13px 5px;
+  color: var(--white);
+  background: var(--ink);
+  box-shadow: 4px 4px 0 var(--coral);
   font-family: var(--display);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 850;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  transform: rotate(-1.6deg);
+  transform: rotate(-1.8deg);
 }
 
 .route-options {
   display: grid;
-  gap: 12px;
-  margin-top: 10px;
+  border-top: 1px solid rgba(18, 19, 15, 0.14);
 }
 
 .choice-button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 4px clamp(14px, 2vw, 22px);
-  min-height: 86px;
-  padding: 16px 18px;
-  border: 1px solid var(--ink);
+  gap: 2px clamp(12px, 1.6vw, 18px);
+  width: auto;
+  margin-inline: calc(-1 * var(--panel-pad));
+  padding: 13px var(--panel-pad);
+  border: 0;
+  border-bottom: 1px solid rgba(18, 19, 15, 0.14);
   color: var(--ink);
-  background: var(--white);
+  background: transparent;
   line-height: 1.3;
   text-align: left;
   cursor: pointer;
-  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
 }
 
 .choice-hint {
   grid-area: 1 / 1 / 2 / 2;
   font-family: var(--display);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 850;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   opacity: 0.62;
 }
@@ -1101,13 +1395,11 @@ h3 {
   grid-area: 2 / 1 / 3 / 2;
   min-width: 0;
   font-family: var(--serif);
-  font-size: clamp(1.08rem, 1.7vw, 1.32rem);
+  font-size: clamp(1.02rem, 1.4vw, 1.18rem);
 }
 
 .choice-button:hover {
-  background: rgba(216, 241, 84, 0.32);
-  box-shadow: 5px 5px 0 var(--ink);
-  transform: translate(-3px, -3px);
+  background: rgba(18, 19, 15, 0.045);
 }
 
 .choice-button svg {
@@ -1117,9 +1409,29 @@ h3 {
   opacity: 0;
 }
 
+@container (min-width: 470px) {
+  .choice-button {
+    grid-template-columns: 5.6rem minmax(0, 1fr) auto;
+    gap: 0 12px;
+  }
+
+  .choice-hint {
+    grid-area: 1 / 1 / 2 / 2;
+    align-self: center;
+    line-height: 1.25;
+  }
+
+  .choice-label {
+    grid-area: 1 / 2 / 2 / 3;
+  }
+
+  .choice-button svg {
+    grid-area: 1 / 3 / 2 / 4;
+  }
+}
+
 .choice-button.is-selected {
   background: var(--lime);
-  box-shadow: 6px 6px 0 var(--coral);
 }
 
 .choice-button.is-selected .choice-hint {
@@ -1127,27 +1439,38 @@ h3 {
 }
 
 .choice-button.is-decline.is-selected {
-  background: var(--paper);
-  box-shadow: 6px 6px 0 var(--ink);
+  background: var(--sky);
 }
 
 .saved-state.is-decline {
-  background: var(--paper);
+  background: var(--sky);
 }
 
 .choice-button.is-selected svg {
   opacity: 1;
 }
 
+.panel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px clamp(16px, 2vw, 24px);
+  margin-top: 18px;
+}
+
+/* в две колонки только когда обоим блокам действительно хватает ширины:
+   при 560–700px подпись у степпера рвётся на четыре строки и выигрыша по высоте нет */
+@container (min-width: 720px) {
+  .panel-row:has(.party-size) {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
 .party-size {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
-  gap: 18px;
-  margin-top: 22px;
-  padding: 18px 0;
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  gap: 14px;
 }
 
 .party-size label {
@@ -1166,19 +1489,19 @@ h3 {
 
 .stepper {
   display: grid;
-  grid-template-columns: 42px 58px 42px;
+  grid-template-columns: 40px 52px 40px;
   flex: 0 0 auto;
-  border: 1px solid var(--ink);
+  border: 1px solid rgba(18, 19, 15, 0.18);
 }
 
 .stepper button,
 .stepper input {
   width: 100%;
   min-width: 0;
-  height: 44px;
+  height: 42px;
   border: 0;
   color: var(--ink);
-  background: var(--white);
+  background: transparent;
   text-align: center;
 }
 
@@ -1195,8 +1518,8 @@ h3 {
 }
 
 .stepper input {
-  border-right: 1px solid var(--ink);
-  border-left: 1px solid var(--ink);
+  border-right: 1px solid rgba(18, 19, 15, 0.18);
+  border-left: 1px solid rgba(18, 19, 15, 0.18);
   appearance: textfield;
   font-weight: 850;
 }
@@ -1207,12 +1530,16 @@ h3 {
 
 .confirm-button {
   width: 100%;
-  margin-top: 24px;
-  box-shadow: 6px 6px 0 var(--coral);
+  min-height: 52px;
+  margin-top: 20px;
+  box-shadow: none;
 }
 
-.confirm-button:not(:disabled):hover {
-  box-shadow: 9px 9px 0 var(--coral);
+/* внутри бланка кнопки не прыгают и не отбрасывают жёсткую тень */
+.choice-panel .button:not(:disabled):hover {
+  background: var(--blue);
+  box-shadow: none;
+  transform: none;
 }
 
 .confirm-button:disabled {
@@ -1220,18 +1547,26 @@ h3 {
 }
 
 .dress-pledge {
-  margin-top: 24px;
-  padding: 16px 18px;
-  border: 1px solid var(--ink);
-  background: var(--white);
-  transition: background 160ms ease, box-shadow 160ms ease;
+  padding: 13px 15px;
+  background: rgba(18, 19, 15, 0.045);
+  transition: background 160ms ease, opacity 160ms ease;
+}
+
+/* гость не прилетает — наряжаться не для чего, блок гаснет и перестаёт быть обязательным */
+.dress-pledge.is-muted {
+  background: transparent;
+  opacity: 0.4;
+}
+
+.dress-pledge.is-muted label {
+  cursor: default;
 }
 
 .dress-pledge label {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr);
   gap: 14px;
-  align-items: center;
+  align-items: start;
   cursor: pointer;
 }
 
@@ -1243,17 +1578,21 @@ h3 {
   clip-path: inset(50%);
 }
 
+/* сдвиг ставит центр квадратика на первую строку подписи, а не на середину блока:
+   при переносе подписи в две строки центровка по блоку уводила галочку вниз */
 .dress-pledge label > svg {
   width: 26px;
   height: 26px;
+  margin-top: -4px;
   padding: 3px;
-  border: 1px solid var(--ink);
+  border: 1px solid rgba(18, 19, 15, 0.3);
   color: transparent;
   background: var(--white);
-  transition: color 140ms ease, background 140ms ease;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
 }
 
 .dress-pledge:has(input:checked) label > svg {
+  border-color: var(--ink);
   color: var(--ink);
   background: var(--lime);
 }
@@ -1280,25 +1619,33 @@ h3 {
 }
 
 .dress-pledge.has-error {
-  background: rgba(255, 98, 73, 0.14);
-  box-shadow: 5px 5px 0 var(--coral);
+  background: rgba(255, 98, 73, 0.1);
+  box-shadow: inset 0 0 0 1px var(--coral);
 }
 
 .pledge-error {
-  margin: 12px 0 0;
+  margin: 8px 0 0;
+  color: #c8351f;
   font-family: var(--serif);
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-style: italic;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .guest-message {
-  margin-top: 22px;
+  margin-top: 16px;
+}
+
+/* подпись и пояснение в одну строку — экономит высоту панели */
+.field-head {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .guest-message label {
-  display: block;
-  margin-bottom: 6px;
   font-family: var(--display);
   font-size: 0.82rem;
   font-variation-settings: "wght" 780;
@@ -1306,22 +1653,31 @@ h3 {
 }
 
 .guest-message p {
-  margin: 0 0 12px;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  opacity: 0.68;
 }
 
 .guest-message textarea {
   display: block;
   width: 100%;
-  min-height: 112px;
-  padding: 14px;
+  min-height: 78px;
+  padding: 12px 14px;
   resize: vertical;
-  border: 1px solid var(--ink);
+  border: 0;
+  border-bottom: 2px solid rgba(18, 19, 15, 0.2);
   border-radius: 0;
   color: var(--ink);
-  background: var(--white);
+  background: rgba(18, 19, 15, 0.045);
   line-height: 1.55;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.guest-message textarea:focus-visible {
+  border-bottom-color: var(--blue);
+  outline: none;
+  background: rgba(48, 72, 238, 0.06);
 }
 
 .guest-message textarea::placeholder {
@@ -1331,9 +1687,8 @@ h3 {
 .saved-state {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid var(--ink);
+  margin-top: 16px;
+  padding: 14px 16px;
   background: var(--lime);
 }
 
@@ -1352,7 +1707,7 @@ h3 {
 }
 
 .save-message {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   font-size: 0.76rem;
   line-height: 1.4;
 }
@@ -1369,8 +1724,10 @@ h3 {
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  column-gap: clamp(30px, 7vw, 120px);
+  /* раскладка как в «Подарках»: равные колонки, содержимое по верху */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  column-gap: clamp(50px, 9vw, 150px);
   padding: clamp(72px, 10vw, 150px) clamp(18px, 8vw, 130px);
   overflow: hidden;
   color: var(--white);
@@ -1392,7 +1749,7 @@ h3 {
 }
 
 .plan-heading h2 {
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 2.2vw, 30px);
   color: var(--lime);
   font-family: var(--serif);
   font-size: clamp(3rem, 6vw, 6rem);
@@ -1407,10 +1764,31 @@ h3 {
   list-style: none;
 }
 
+.plan-lead {
+  max-width: 44ch;
+  margin: 0;
+  color: rgba(255, 253, 246, 0.76);
+  font-size: clamp(1.02rem, 1.5vw, 1.22rem);
+  line-height: 1.55;
+}
+
+.plan-kept {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--lime);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.route-list {
+  --list-text: clamp(1.02rem, 1.8vw, 1.3rem);
+}
+
 .route-list li {
   display: grid;
-  grid-template-columns: 50px 1fr;
-  gap: 15px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 16px;
   position: relative;
   padding: 22px 0;
   border-top: 1px solid rgba(255, 253, 246, 0.35);
@@ -1424,16 +1802,22 @@ h3 {
   border-bottom: 1px solid rgba(255, 253, 246, 0.35);
 }
 
-.route-list span {
+.list-mark {
+  display: grid;
+  height: calc(var(--list-text, 1rem) * 1.35);
+  align-self: start;
+  place-items: center;
   color: var(--lime);
-  font-family: var(--serif);
-  font-size: 1.2rem;
-  font-style: italic;
+}
+
+.list-mark svg {
+  display: block;
+  transform: rotate(-12deg);
 }
 
 .route-list p {
   margin: 0;
-  font-size: clamp(1.02rem, 1.8vw, 1.3rem);
+  font-size: var(--list-text);
 }
 
 .day-plan {
@@ -1459,19 +1843,7 @@ h3 {
 }
 
 .section-heading-row {
-  display: grid;
-  grid-template-columns: 1fr 0.65fr;
-  align-items: end;
-  gap: 60px;
   margin-bottom: clamp(44px, 7vw, 90px);
-}
-
-.day-note {
-  margin: 0 0 0.6em;
-  padding-left: 18px;
-  border-left: 5px solid var(--coral);
-  font-weight: 700;
-  line-height: 1.5;
 }
 
 .day-timeline {
@@ -1522,10 +1894,13 @@ h3 {
   align-self: start;
   color: var(--white);
   background: var(--coral);
-  font-family: var(--serif);
-  font-style: italic;
   box-shadow: 4px 4px 0 var(--ink);
   transform: rotate(-3deg);
+}
+
+.timeline-index svg {
+  display: block;
+  transform: rotate(-9deg);
 }
 
 .timeline-title {
@@ -1544,14 +1919,15 @@ h3 {
 
 .day-timeline time {
   display: inline-block;
-  margin-top: 10px;
-  padding: 3px 8px;
-  color: var(--white);
-  background: var(--ink);
+  margin-top: 12px;
+  padding: 5px 12px 4px;
+  color: var(--ink);
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--ink);
   font-family: var(--display);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+  font-variation-settings: "wght" 850;
+  letter-spacing: 0.05em;
 }
 
 .day-timeline p {
@@ -1616,8 +1992,6 @@ h3 {
 }
 
 .weather-title-block {
-  position: sticky;
-  top: 100px;
   align-self: start;
 }
 
@@ -1676,23 +2050,19 @@ h3 {
   gap: 12px;
   margin: 25px 0 0;
   padding-left: 0;
-  counter-reset: weather-step;
   line-height: 1.5;
   list-style: none;
 }
 
 .weather-scenarios ol li {
+  --list-text: 1rem;
   display: grid;
-  grid-template-columns: 2.1rem minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   gap: 12px;
-  counter-increment: weather-step;
 }
 
-.weather-scenarios ol li::before {
-  color: var(--lime);
-  content: '0' counter(weather-step);
-  font-family: var(--serif);
-  font-style: italic;
+.weather-scenarios .list-mark {
+  height: 1.5rem;
 }
 
 .walk-clothing {
@@ -1762,22 +2132,27 @@ h3 {
 
 .dress-copy {
   display: grid;
-  grid-template-columns: 80px minmax(0, 0.5fr) auto minmax(0, 1.2fr);
-  gap: 28px clamp(28px, 3.4vw, 52px);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: start;
+  gap: 34px clamp(28px, 4vw, 80px);
   margin-bottom: clamp(50px, 8vw, 100px);
 }
 
-.dress-copy h2 {
-  color: var(--lime);
-  white-space: nowrap;
-}
-
-.dress-details {
+.dress-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: clamp(16px, 1.8vw, 26px);
   min-width: 0;
 }
 
-.dress-copy > svg {
+.dress-heading > * {
+  grid-column: 2;
+}
+
+.dress-heading > svg {
+  grid-row: 1 / span 2;
+  grid-column: 1;
   width: 68px;
   height: 68px;
   padding: 14px;
@@ -1787,8 +2162,21 @@ h3 {
   transform: rotate(-4deg);
 }
 
+.dress-code h2 {
+  color: var(--lime);
+  font-size: clamp(2.8rem, 6vw, 6rem);
+  text-wrap: balance;
+}
+
+.dress-details {
+  min-width: 0;
+  padding-left: clamp(14px, 1.4vw, 20px);
+  border-left: 4px solid var(--coral);
+}
+
 .dress-details > p {
-  margin-top: 0;
+  max-width: 46ch;
+  margin: 0;
   font-size: clamp(1.05rem, 1.7vw, 1.3rem);
   line-height: 1.55;
 }
@@ -1993,16 +2381,124 @@ h3 {
   aspect-ratio: 5 / 7;
 }
 
-.product:nth-child(2n) {
-  margin-top: clamp(22px, 3vw, 52px);
+
+/* вразнобой по вертикали — только в запасной сетке (узкие экраны) */
+@media (max-width: 1119.98px) {
+  .product:nth-child(2n) {
+    margin-top: clamp(22px, 3vw, 52px);
+  }
+
+  .product:nth-child(4n + 3) {
+    margin-top: clamp(40px, 5.5vw, 92px);
+  }
+
+  .product:nth-child(6n + 5) {
+    margin-top: 0;
+  }
 }
 
-.product:nth-child(4n + 3) {
-  margin-top: clamp(40px, 5.5vw, 92px);
+/* --- 6: на широких экранах пятнадцать карточек складываются в сердце.
+   Сетка из двенадцати колонок, карточка занимает две. Ряды: 4 (две доли, между
+   ними выемка шириной в карточку) → 6 (самый широкий) → 5 → 1 (острие).
+   Нечётные ряды сдвинуты на одну колонку — это полкарточки, силуэт сужается плавно.
+   Ниже 1120px работает запасная сетка выше — сердце не рассыпается. */
+.heart-nook {
+  display: none;
 }
 
-.product:nth-child(6n + 5) {
-  margin-top: 0;
+.heart-nook svg {
+  height: auto;
+  filter: drop-shadow(3px 4px 0 rgba(18, 19, 15, 0.45));
+  animation: nook-drift 7s ease-in-out infinite;
+}
+
+/* перья расставлены вразнобой по ширине выемки, а не в одну колонку */
+.heart-nook svg:nth-child(1) {
+  width: clamp(58px, 6vw, 92px);
+  justify-self: start;
+  color: var(--lime);
+  rotate: -17deg;
+}
+
+.heart-nook svg:nth-child(2) {
+  width: clamp(44px, 4.6vw, 70px);
+  justify-self: end;
+  color: var(--coral);
+  rotate: 13deg;
+  animation-delay: -2.3s;
+}
+
+.heart-nook svg:nth-child(3) {
+  width: clamp(32px, 3.4vw, 52px);
+  justify-self: center;
+  color: var(--violet);
+  rotate: -7deg;
+  animation-delay: -4.6s;
+}
+
+@keyframes nook-drift {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -9px; }
+}
+
+@media (min-width: 1120px) {
+  .product-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(10px, 1.2vw, 20px);
+    row-gap: clamp(8px, 0.9vw, 16px);
+  }
+
+  .product-grid > .product {
+    margin: 0;
+  }
+
+  /* в сердце все карточки одной пропорции — иначе силуэт не читается */
+  .product-grid > .product > .product-placeholder.has-image {
+    aspect-ratio: 4 / 5;
+  }
+
+  /* верхний ряд: левая и правая доли, между ними выемка.
+     Внешние карточки опущены — так доли читаются округлыми, а не плоскими. */
+  .product-grid > .product:nth-child(1) { grid-area: 1 / 2 / 2 / 4; margin-top: clamp(34px, 4vw, 66px); }
+  .product-grid > .product:nth-child(2) { grid-area: 1 / 4 / 2 / 6; }
+  .product-grid > .product:nth-child(3) { grid-area: 1 / 8 / 2 / 10; }
+  .product-grid > .product:nth-child(4) { grid-area: 1 / 10 / 2 / 12; margin-top: clamp(34px, 4vw, 66px); }
+
+  /* самый широкий ряд — во всю ширину */
+  .product-grid > .product:nth-child(5) { grid-area: 2 / 1 / 3 / 3; }
+  .product-grid > .product:nth-child(6) { grid-area: 2 / 3 / 3 / 5; }
+  .product-grid > .product:nth-child(7) { grid-area: 2 / 5 / 3 / 7; }
+  .product-grid > .product:nth-child(8) { grid-area: 2 / 7 / 3 / 9; }
+  .product-grid > .product:nth-child(9) { grid-area: 2 / 9 / 3 / 11; }
+  .product-grid > .product:nth-child(10) { grid-area: 2 / 11 / 3 / 13; }
+
+  /* сужение, сдвиг на полкарточки */
+  .product-grid > .product:nth-child(11) { grid-area: 3 / 2 / 4 / 4; margin-top: clamp(26px, 3vw, 52px); }
+  .product-grid > .product:nth-child(12) { grid-area: 3 / 4 / 4 / 6; margin-top: clamp(12px, 1.4vw, 24px); }
+  .product-grid > .product:nth-child(13) { grid-area: 3 / 6 / 4 / 8; }
+  .product-grid > .product:nth-child(14) { grid-area: 3 / 8 / 4 / 10; margin-top: clamp(12px, 1.4vw, 24px); }
+  .product-grid > .product:nth-child(15) { grid-area: 3 / 10 / 4 / 12; margin-top: clamp(26px, 3vw, 52px); }
+
+  /* острие — подтянуто вверх, чтобы уголок не отрывался от сужения */
+  .product-grid > .product:nth-child(16) {
+    --card-tilt: 0deg;
+    grid-area: 4 / 6 / 5 / 8;
+    margin-top: clamp(-26px, -1.6vw, -12px);
+  }
+
+  /* перья оседают в ложбинке между долями: заполняют пустоту, но не
+     превращаются в ещё одну карточку и не спорят с силуэтом */
+  .heart-nook {
+    display: grid;
+    grid-area: 1 / 6 / 2 / 8;
+    /* .product-grid ставит align-items: start, из-за этого блок не растягивался
+       на высоту ряда и перья висели у верхнего края вместо ложбинки */
+    align-self: stretch;
+    justify-items: center;
+    align-content: end;
+    gap: clamp(6px, 0.9vw, 16px);
+    padding-bottom: clamp(14px, 1.8vw, 30px);
+  }
 }
 
 .product:hover .product-placeholder img {
@@ -2149,6 +2645,7 @@ h3 {
 }
 
 .gift-steps {
+  --list-text: clamp(1.05rem, 1.8vw, 1.32rem);
   margin: 0;
   padding: 0;
   border-top: 1px solid rgba(255, 253, 246, 0.65);
@@ -2157,8 +2654,8 @@ h3 {
 
 .gift-steps li {
   display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 15px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 16px;
   position: relative;
   padding: 24px 0;
   border-bottom: 1px solid rgba(255, 253, 246, 0.65);
@@ -2168,15 +2665,9 @@ h3 {
   background: rgba(216, 241, 84, 0.09);
 }
 
-.gift-steps span {
-  color: var(--lime);
-  font-family: var(--serif);
-  font-style: italic;
-}
-
 .gift-steps p {
   margin: 0;
-  font-size: clamp(1.05rem, 1.8vw, 1.32rem);
+  font-size: var(--list-text);
 }
 
 .finale {
@@ -2236,7 +2727,10 @@ h3 {
   text-wrap: balance;
 }
 
+/* плашка стоит над буквами. em здесь считается от 0.26em самой плашки,
+   поэтому 0.46em её кегля = 0.12em кегля заголовка: заход + столько же воздуха */
 .finale .happy-word {
+  margin-bottom: 0.46em;
   color: var(--ink);
   text-shadow: none;
 }
@@ -2317,14 +2811,17 @@ h3 {
 }
 
 .final-invitation {
+  max-width: 100%;
   margin: clamp(38px, 4.5vw, 64px) 0 0;
+  padding-right: 14px;
   color: var(--lime);
   font-family: var(--serif);
-  font-size: clamp(3rem, 8vw, 8rem);
+  font-size: clamp(2.3rem, 6vw, 6.4rem);
   font-style: italic;
-  letter-spacing: -0.055em;
-  line-height: 0.95;
-  text-shadow: 6px 6px 0 var(--blue);
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+  overflow-wrap: break-word;
+  text-shadow: 5px 5px 0 var(--blue);
   animation: invitation-pulse 4s ease-in-out infinite;
 }
 
@@ -2438,11 +2935,7 @@ h3 {
 @keyframes poster-arrive {
   from {
     opacity: 0;
-    transform: translate(60px, 30px) rotate(7deg) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: rotate(1.6deg);
+    transform: translate(60px, 30px) rotate(7deg) scale(0.92);
   }
 }
 
@@ -2473,7 +2966,7 @@ h3 {
 
 @keyframes invitation-pulse {
   0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(7px); }
+  50% { transform: translateX(5px); }
 }
 
 @media (max-width: 980px) {
@@ -2508,16 +3001,8 @@ h3 {
     align-self: center;
   }
 
-  .route-recommendation {
-    grid-template-columns: 0.7fr 1fr 1.3fr;
-  }
-
-  .route-recommendation em {
-    grid-column: 2 / -1;
-  }
-
   .product-grid {
-    column-count: 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -2526,12 +3011,24 @@ h3 {
     scroll-padding-top: 52px;
   }
 
-  .countdown-units span {
-    font-size: 0.5rem;
-    letter-spacing: 0.06em;
+  .countdown-units {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .countdown-units li {
+    padding-inline: 4px;
+  }
+
+  .countdown-units span {
+    font-size: 0.48rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* «Полевой выпуск» скрыт, и ссылка авторазмещением уезжала в среднюю колонку
+     вплотную к логотипу — раскладку задаём явно */
   .masthead {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
     min-height: 52px;
     padding-inline: 14px;
   }
@@ -2541,12 +3038,15 @@ h3 {
   }
 
   .masthead-link {
+    grid-column: 2;
     justify-self: end;
   }
 
+  /* контент не должен касаться коралловой рамки: рамка стоит на 9px от края
+     и сама 7px толщиной, значит внутренний край — 16px */
   .cover {
     min-height: auto;
-    padding: 30px 16px 20px;
+    padding: 32px 30px 30px;
   }
 
   .cover::before {
@@ -2554,8 +3054,25 @@ h3 {
     clip-path: polygon(0 0, 61% 0, 61% 5%, 100% 5%, 100% 100%, 69% 100%, 69% 95%, 0 95%);
   }
 
+  .cover-tags {
+    margin-left: 0;
+  }
+
+  .cover-date {
+    margin-right: -9px;
+    padding-inline: clamp(8px, 2.6vw, 12px);
+    box-shadow: 4px 4px 0 var(--ink);
+    font-size: clamp(0.5rem, 2.32vw, 0.6rem);
+    letter-spacing: 0.07em;
+  }
+
+  .happy-word {
+    padding: 0.4em 0.5em 0.34em;
+    letter-spacing: 0.1em;
+  }
+
   .cover-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 28px;
     min-height: auto;
@@ -2566,25 +3083,28 @@ h3 {
     font-size: clamp(3.2rem, 19.5vw, 5.8rem);
   }
 
-  .correction-th {
-    top: -0.56em;
-    right: -0.5em;
-    font-size: 0.27em;
-  }
-
   .flight-marquee-group {
-    gap: 15px;
+    --marquee-gap: 15px;
     padding-block: 11px;
     font-size: 0.64rem;
   }
 
   .bird-scene {
-    margin-inline: 18%;
+    width: auto;
+    height: auto;
+    margin-inline: 12%;
     box-shadow: 9px 9px 0 rgba(18, 19, 15, 0.24);
   }
 
+  /* птица садится на нижний-левый угол открытки выше подписи и не выходит за рамку */
+  .scene-escapee {
+    bottom: 17%;
+    left: -14.5%;
+    width: clamp(50px, 15vw, 66px);
+  }
+
   .cover-next {
-    margin-top: 24px;
+    margin-top: 22px;
   }
 
   .content-grid {
@@ -2606,15 +3126,20 @@ h3 {
     padding: 0;
   }
 
+  /* карточка занимает экран целиком, содержимое — по центру,
+     иначе под кнопками оставалась пустая синяя полоса */
   .quiz-shell {
+    display: grid;
+    align-content: center;
     min-height: 100svh;
-    padding: 28px 16px;
+    /* снизу оставлено место под плавающий тумблер звука */
+    padding: 28px 16px 74px;
     border: 0;
     box-shadow: none;
   }
 
   .progress-track {
-    margin-bottom: 50px;
+    margin-bottom: 34px;
   }
 
   .question-fieldset legend {
@@ -2632,7 +3157,8 @@ h3 {
   }
 
   .name-form {
-    min-height: 82svh;
+    min-height: 76svh;
+    justify-content: center;
   }
 
   .personal-result {
@@ -2649,20 +3175,12 @@ h3 {
     font-size: clamp(3.2rem, 15vw, 5rem);
   }
 
-  .route-recommendation {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 22px 18px;
-  }
-
-  .route-recommendation em {
-    grid-column: auto;
-  }
-
   .choice-panel {
     margin-top: 35px;
-    padding: 16px;
-    box-shadow: 7px 7px 0 var(--ink);
+  }
+
+  .panel-row:has(.party-size) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .party-size {
@@ -2675,9 +3193,10 @@ h3 {
     padding: 72px 18px;
   }
 
-  .section-heading-row {
-    grid-template-columns: 1fr;
-    gap: 34px;
+  /* grid-column: 2 нужен только двухколоночной раскладке. В одну колонку он
+     создавал неявную вторую колонку, и список маршрута сжимался до 85px. */
+  .guide-note {
+    grid-column: 1;
   }
 
   .day-plan {
@@ -2707,12 +3226,8 @@ h3 {
     padding: 72px 18px;
   }
 
-  .weather-title-block {
-    position: static;
-  }
-
   .weather-title-block > svg {
-    margin-bottom: 45px;
+    margin-bottom: 18px;
   }
 
   .weather-scenarios article {
@@ -2730,22 +3245,30 @@ h3 {
 
   .dress-copy {
     grid-template-columns: 1fr;
+    gap: 26px;
   }
 
-  .dress-copy > svg {
-    margin-bottom: 28px;
+  .dress-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .dress-heading > * {
+    grid-column: 1;
+  }
+
+  .dress-heading > svg {
+    grid-row: auto;
+    margin-bottom: 26px;
   }
 
   .product-grid {
-    column-width: auto;
-    column-count: 2;
-    column-gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 14px;
     padding-inline: 0;
   }
 
   .product {
     width: 100%;
-    margin-bottom: 32px;
     margin-left: 0;
     padding: 0;
     box-shadow: none;
@@ -2780,8 +3303,46 @@ h3 {
     padding: 72px 18px;
   }
 
+  .gift-title {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gift-title > * {
+    grid-column: 1;
+  }
+
   .gift-title > svg {
-    margin-bottom: 45px;
+    grid-row: auto;
+    grid-column: 1;
+    margin-bottom: 22px;
+  }
+
+  /* колонки узкие, автоперенос рвал слова почти в каждой строке */
+  .day-timeline p,
+  .weather-scenarios ol li,
+  .dress-details > p,
+  .walk-clothing > p,
+  .gift-title > p:not(.eyebrow),
+  .final-note {
+    -webkit-hyphens: none;
+    hyphens: none;
+  }
+
+  /* на телефоне все крупные засечные заголовки переносятся на 2-4 строки,
+     и интерлиньяж 0.86-0.95 склеивал строки: «й» и «ё» упирались в верх следующей */
+  .test-intro h2,
+  .confirmation h2,
+  .day-plan h2,
+  .weather h2,
+  .dress-code h2,
+  .gifts h2,
+  .plan-heading h2,
+  .name-form h2 {
+    line-height: 1.02;
+  }
+
+  .personal-result h2 {
+    line-height: 0.94;
   }
 
   .finale {
@@ -2821,12 +3382,9 @@ h3 {
     font-size: 0.7rem;
   }
 
-  .bird-scene {
-    margin-inline: 10%;
-  }
-
+  /* колонка 32px осталась от старой нумерации ответов: текст попадал в неё
+     и переносился по одному слову в строку */
   .answer-button {
-    grid-template-columns: 32px 1fr auto;
     padding: 13px;
     font-size: 0.89rem;
   }
@@ -2839,15 +3397,11 @@ h3 {
   .quiz-actions .button {
     width: 100%;
   }
-
-  .route-list li {
-    grid-template-columns: 38px 1fr;
-  }
 }
 
 @media (max-width: 340px) {
   .product-grid {
-    column-count: 1;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2864,5 +3418,108 @@ h3 {
   .reveal-target {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .cover-confetti,
+  .cover-flyby {
+    display: none;
+  }
+
+  .heart-nook svg {
+    animation: none;
+  }
+
+  .ltr {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .cover-blob {
+    transform: translateY(-50%) rotate(-8deg) !important;
+  }
+
+  .scene-card {
+    opacity: 1 !important;
+    transform: rotate(-3.6deg) !important;
+  }
+}
+
+/* ── Тумблер птичьих голосов ─────────────────────────────────────────────── */
+
+.bird-song {
+  position: fixed;
+  z-index: 45;
+  bottom: 18px;
+  left: 18px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px 7px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: var(--white);
+  box-shadow: 4px 4px 0 var(--ink);
+  font-family: var(--display);
+  font-size: 0.68rem;
+  font-variation-settings: "wght" 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.bird-song:hover {
+  background: var(--lime);
+}
+
+.bird-song:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.bird-song.is-playing {
+  background: var(--lime);
+}
+
+.bird-song svg {
+  flex: none;
+}
+
+.bird-song-eq {
+  display: inline-flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 12px;
+}
+
+.bird-song-eq i {
+  width: 2px;
+  background: var(--ink);
+  animation: bird-song-eq 900ms ease-in-out infinite;
+}
+
+.bird-song-eq i:nth-child(1) { height: 6px; animation-delay: -600ms; }
+.bird-song-eq i:nth-child(2) { height: 12px; animation-delay: -300ms; }
+.bird-song-eq i:nth-child(3) { height: 8px; animation-delay: 0ms; }
+
+@keyframes bird-song-eq {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+@media (max-width: 720px) {
+  .bird-song {
+    bottom: 14px;
+    left: 14px;
+    gap: 6px;
+    padding: 7px 10px 6px;
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bird-song-eq i {
+    animation: none;
   }
 }
