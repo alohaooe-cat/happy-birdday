@@ -105,47 +105,53 @@ function asset(path: string) {
 // громкость выводится плавно, чтобы не пугать открывшего страницу.
 function BirdSong() {
   const audioRef = useRef<HTMLAudioElement>(null)
-  const fadeRef = useRef(0)
   const [playing, setPlaying] = useState(false)
+  const [failed, setFailed] = useState(false)
 
-  useEffect(() => () => {
-    cancelAnimationFrame(fadeRef.current)
-    audioRef.current?.pause()
-  }, [])
+  useEffect(() => () => { audioRef.current?.pause() }, [])
 
   const toggle = () => {
     const audio = audioRef.current
     if (!audio) return
-    cancelAnimationFrame(fadeRef.current)
+    setFailed(false)
 
-    if (playing) {
+    // Состояние берём у самого элемента: React-стейт может разойтись
+    // с реальностью, если воспроизведение прервала система.
+    if (!audio.paused) {
       audio.pause()
-      setPlaying(false)
       return
     }
 
-    audio.volume = 0
-    audio.play().then(() => {
-      setPlaying(true)
-      const started = performance.now()
-      const fade = (now: number) => {
-        const ratio = Math.min(1, (now - started) / 900)
-        audio.volume = ratio * 0.32
-        if (ratio < 1) fadeRef.current = requestAnimationFrame(fade)
-      }
-      fadeRef.current = requestAnimationFrame(fade)
-    }).catch(() => setPlaying(false))
+    // Громкость выставляется сразу, без плавного ввода: раньше она поднималась
+    // по requestAnimationFrame, а он глушится при троттлинге — трек играл
+    // на нуле, и кнопка выглядела нерабочей. Где громкость только для чтения
+    // (iOS, часть Android), присваивание просто игнорируется.
+    audio.volume = 0.32
+    // play() обязан вызываться синхронно внутри обработчика жеста,
+    // иначе Android считает запуск не пользовательским и отклоняет его.
+    const started = audio.play()
+    if (started) started.catch(() => setFailed(true))
   }
 
   return (
     <>
-      <audio ref={audioRef} src={asset('/bird-song.mp3')} loop preload="none" />
+      {/* Состояние кнопки ведут события самого элемента — это единственный
+          источник правды, работающий одинаково во всех браузерах. */}
+      <audio
+        ref={audioRef}
+        src={asset('/bird-song.mp3')}
+        loop
+        preload="metadata"
+        onPlay={() => { setPlaying(true); setFailed(false) }}
+        onPause={() => setPlaying(false)}
+        onError={() => { setPlaying(false); setFailed(true) }}
+      />
       <button
-        className={`bird-song ${playing ? 'is-playing' : ''}`}
+        className={`bird-song ${playing ? 'is-playing' : ''} ${failed ? 'has-error' : ''}`}
         type="button"
         aria-pressed={playing}
-        aria-label={playing ? ui.soundPause : ui.soundPlay}
-        title={playing ? ui.soundPause : ui.soundPlay}
+        aria-label={failed ? ui.soundError : playing ? ui.soundPause : ui.soundPlay}
+        title={failed ? ui.soundError : playing ? ui.soundPause : ui.soundPlay}
         onClick={toggle}
       >
         {playing
@@ -345,7 +351,13 @@ function App() {
         window.scrollTo({ top: 0, behavior: 'auto' })
         return
       }
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      const target = document.getElementById(id)
+      if (!target) return
+      // scrollIntoView сам учитывает scroll-padding-top, но срабатывает не во
+      // всех окружениях. Считаем позицию вручную и вычитаем тот же отступ —
+      // на десктопе это высота липкой шапки, на телефоне ноль.
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+      window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' })
     }, 50)
   }
 
@@ -422,21 +434,25 @@ function App() {
     scrollTo('personal')
   }
 
+  /** Возвращает false, если отправка не удалась: тогда гостя не уводим
+      от панели, чтобы он увидел ошибку и кнопку повтора. */
   const persistResponse = async (nextResponse: GuestResponse) => {
     saveResponse(nextResponse)
     setResponse(nextResponse)
 
     if (!hasRemoteEndpoint) {
       setSaveStatus('demo')
-      return
+      return true
     }
 
     setSaveStatus('saving')
     try {
       await sendResponse(nextResponse)
       setSaveStatus('success')
+      return true
     } catch {
       setSaveStatus('error')
+      return false
     }
   }
 
@@ -467,7 +483,8 @@ function App() {
       guestMessage: guestMessage.trim(),
       updatedAt: new Date().toISOString(),
     }
-    await persistResponse(nextResponse)
+    const sent = await persistResponse(nextResponse)
+    if (sent) scrollTo('finale')
     setNotice(
       attendance === 'walk'
         ? ui.notices.walkConfirmed
@@ -1059,7 +1076,7 @@ function Finale({
 }) {
   const declined = attendance === 'no'
   return (
-      <footer className="finale">
+      <footer className="finale" id="finale">
         <div className="finale-topline"><Sparkles size={22} aria-hidden="true" /><span>{ui.finale.topline}</span></div>
         <h2 className="birdday-lockup" aria-label="Happy Birdday">
           <span className="happy-word" aria-hidden="true">HAPPY<Spark /></span>

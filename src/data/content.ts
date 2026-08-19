@@ -278,6 +278,7 @@ export const siteContent = {
     soundPlay: 'Включить голоса птиц',
     soundPause: 'Выключить голоса птиц',
     soundLabel: 'чирик-чирик',
+    soundError: 'Звук не запустился — попробуй ещё раз',
     marquee: ['29 августа', 'Кронштадт', 'разнопёрый слёт', 'happy birdday'],
     introEyebrow: 'Предварительное наблюдение',
     introReturn: 'Показать мой результат',

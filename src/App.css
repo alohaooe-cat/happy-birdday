@@ -3512,6 +3512,12 @@ h3 {
   background: var(--lime);
 }
 
+/* браузер отказался запускать звук — молчащая кнопка выглядит поломкой */
+.bird-song.has-error {
+  color: var(--white);
+  background: var(--coral);
+}
+
 .bird-song svg {
   flex: none;
 }
