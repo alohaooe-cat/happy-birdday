@@ -3008,6 +3008,12 @@ h3 {
   50% { transform: translateY(5px); }
 }
 
+/* та же подсказка, но короче ход и вдвое медленнее — для «Уменьшения движения» */
+@keyframes arrow-drift-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
 @keyframes marquee-flight {
   to { transform: translateX(-50%); }
 }
@@ -3493,6 +3499,14 @@ h3 {
      информации, поэтому она едет даже при «Уменьшении движения» */
   .flight-marquee-track {
     animation-duration: 78s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  /* стрелка «Снижаемся» — тоже не украшение: она сообщает, что страница
+     листается. Оставляем ход, но мягче и медленнее. */
+  .cover-next svg {
+    animation-name: arrow-drift-soft !important;
+    animation-duration: 3.2s !important;
     animation-iteration-count: infinite !important;
   }
 
