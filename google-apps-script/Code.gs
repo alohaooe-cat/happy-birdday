@@ -20,6 +20,17 @@ const HEADERS = [
 ];
 
 function doPost(event) {
+  // Блокировка: между «найти строку по responseId» и «дописать новую» скрипт
+  // может получить второй запрос с тем же responseId и выполнить его
+  // параллельно — тогда оба не находят строку и оба дописывают. Именно так
+  // в таблице появляются дубли одного гостя.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch (lockError) {
+    return json_({ ok: false, error: 'busy: ' + lockError });
+  }
+
   try {
     const payload = JSON.parse(event.postData.contents);
     if (!payload.responseId) throw new Error('responseId is required');
@@ -73,6 +84,8 @@ function doPost(event) {
     return json_({ ok: true, responseId: payload.responseId, updated: Boolean(existingRow) });
   } catch (error) {
     return json_({ ok: false, error: String(error) });
+  } finally {
+    lock.releaseLock();
   }
 }
 

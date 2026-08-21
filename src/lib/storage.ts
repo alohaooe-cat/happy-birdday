@@ -44,7 +44,23 @@ export function saveResponse(response: GuestResponse) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(response))
 }
 
-export async function sendResponse(response: GuestResponse) {
+// Отправки выстраиваются в очередь. Apps Script отвечает 4-6 секунд, и если
+// гость успевает отметиться в стае, пока летит первая отправка (страховка
+// после теста), скрипт получает два запроса одновременно, оба не находят
+// строку по responseId и оба добавляют новую — в таблице появляется дубль.
+let queue: Promise<unknown> = Promise.resolve()
+
+export function sendResponse(response: GuestResponse) {
+  const run = queue.then(
+    () => postResponse(response),
+    () => postResponse(response),
+  )
+  // хвост очереди не должен падать, иначе следующая отправка не начнётся
+  queue = run.catch(() => undefined)
+  return run
+}
+
+async function postResponse(response: GuestResponse) {
   if (!endpoint) return
 
   const result = await fetch(endpoint, {
