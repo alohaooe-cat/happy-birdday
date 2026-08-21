@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   ArrowDown,
+  ArrowUp,
   ArrowLeft,
   ArrowRight,
   Bird,
@@ -11,12 +12,9 @@ import {
   ExternalLink,
   Feather,
   Gift,
-  Minus,
-  Plus,
   RefreshCcw,
   Sparkles,
   Sun,
-  Users,
   Volume2,
   VolumeX,
 } from 'lucide-react'
@@ -249,14 +247,13 @@ function App() {
   )
   const [guestName, setGuestName] = useState(initialResponse?.guestName ?? '')
   const [response, setResponse] = useState<GuestResponse | null>(initialResponse)
-  const [selectedFlock, setSelectedFlock] = useState<Flock>(initialResponse?.selectedFlock ?? 'owl')
   const [attendance, setAttendance] = useState<Attendance | null>(
     initialResponse?.attendance ?? null,
   )
-  const [partySize, setPartySize] = useState(Math.max(1, initialResponse?.excursionPartySize ?? 1))
   const [guestMessage, setGuestMessage] = useState(initialResponse?.guestMessage ?? '')
   const [dressPledge, setDressPledge] = useState(initialResponse?.dressPledge ?? false)
   const [pledgeError, setPledgeError] = useState(false)
+  const [confirmationInView, setConfirmationInView] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(initialResponse ? 'demo' : 'idle')
   const [notice, setNotice] = useState('')
   const personalRef = useRef<HTMLElement>(null)
@@ -266,8 +263,9 @@ function App() {
       '.content-grid > *',
       '.quiz-shell > *',
       '.personal-result > *',
-      '.plan-heading',
-      '.route-list li',
+      '.walk-card',
+      '.choice-line',
+      '.choice-cta',
       '.section-heading-row > *',
       '.day-timeline li',
       '.weather-title-block',
@@ -277,7 +275,6 @@ function App() {
       '.product',
       '.gift-title',
       '.gift-steps li',
-      '.final-summary > *',
       '.final-note',
       '.final-actions',
       '.final-invitation',
@@ -305,6 +302,34 @@ function App() {
     targets.forEach((target) => observer.observe(target))
     return () => observer.disconnect()
   }, [stage, response?.testResult])
+
+  // Маячок нужен там, где призыва к действию не видно. Как только в кадр
+  // попадает сам лётный лист или кнопка «Выбрать время прилёта», он гаснет:
+  // иначе дублирует то, что гость и так видит, и закрывает контент.
+  useEffect(() => {
+    if (stage !== 'result') {
+      setConfirmationInView(false)
+      return
+    }
+
+    const targets = [
+      document.querySelector('.choice-brief'),
+      document.getElementById('confirmation'),
+    ].filter((node): node is Element => node !== null)
+    if (!targets.length) return
+
+    const visible = new Set<Element>()
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) visible.add(entry.target)
+        else visible.delete(entry.target)
+      })
+      setConfirmationInView(visible.size > 0)
+    }, { threshold: 0.12 })
+
+    targets.forEach((target) => observer.observe(target))
+    return () => observer.disconnect()
+  }, [stage])
 
   // Параллакс обложки: каждый план смещается со своей скоростью.
   useEffect(() => {
@@ -344,6 +369,15 @@ function App() {
     const bird: BirdType = score >= 2 ? 'lark' : score <= -2 ? 'owl' : 'pigeon'
     return { score, bird }
   }, [quizAnswers])
+
+  // Ответы, дошедшие только до теста, лежат в браузере и в таблицу не попадали.
+  // Досылаем их при заходе на сайт: строка в таблице обновляется по responseId,
+  // поэтому повторная отправка не создаёт дублей.
+  useEffect(() => {
+    if (!hasRemoteEndpoint) return
+    if (!initialResponse || initialResponse.attendance !== null) return
+    void sendResponse(initialResponse).catch(() => {})
+  }, [initialResponse])
 
   const scrollTo = (id: string) => {
     window.setTimeout(() => {
@@ -426,33 +460,32 @@ function App() {
 
     saveResponse(nextResponse)
     setResponse(nextResponse)
-    setSelectedFlock(nextResponse.selectedFlock)
     setAttendance(null)
-    setPartySize(1)
     setSaveStatus('demo')
     setStage('result')
     scrollTo('personal')
+
+    // Страховка: гость, который дальше никуда не нажмёт, всё равно попадёт
+    // в таблицу с ответами и пустым временем прилёта. Молча, без статуса —
+    // экран результата не должен превращаться в отчёт об отправке.
+    if (hasRemoteEndpoint) void sendResponse(nextResponse).catch(() => {})
   }
 
-  /** Возвращает false, если отправка не удалась: тогда гостя не уводим
-      от панели, чтобы он увидел ошибку и кнопку повтора. */
   const persistResponse = async (nextResponse: GuestResponse) => {
     saveResponse(nextResponse)
     setResponse(nextResponse)
 
     if (!hasRemoteEndpoint) {
       setSaveStatus('demo')
-      return true
+      return
     }
 
     setSaveStatus('saving')
     try {
       await sendResponse(nextResponse)
       setSaveStatus('success')
-      return true
     } catch {
       setSaveStatus('error')
-      return false
     }
   }
 
@@ -470,7 +503,6 @@ function App() {
     setPledgeError(false)
 
     const confirmedFlock: Flock = attendance === 'walk' ? 'lark' : 'owl'
-    setSelectedFlock(confirmedFlock)
 
     const nextResponse: GuestResponse = {
       ...response,
@@ -479,12 +511,11 @@ function App() {
       attendance,
       dressPledge: effectiveDressPledge,
       excursionConfirmed: attendance === 'walk',
-      excursionPartySize: attendance === 'walk' ? Math.max(1, partySize) : 0,
+      excursionPartySize: attendance === 'walk' ? 1 : 0,
       guestMessage: guestMessage.trim(),
       updatedAt: new Date().toISOString(),
     }
-    const sent = await persistResponse(nextResponse)
-    if (sent) scrollTo('finale')
+    await persistResponse(nextResponse)
     setNotice(
       attendance === 'walk'
         ? ui.notices.walkConfirmed
@@ -512,12 +543,10 @@ function App() {
   }
 
   const result = response ? siteContent.results[response.testResult] : null
-  const route = response ? siteContent.routes[response.testResult] : siteContent.routes.owl
   const isConfirmed = response?.attendance != null
     && response.attendance === attendance
     && response.dressPledge === effectiveDressPledge
     && (response.guestMessage ?? '') === guestMessage.trim()
-    && (attendance !== 'walk' || response.excursionPartySize === Math.max(1, partySize))
 
   return (
     <div className="site-shell">
@@ -733,32 +762,34 @@ function App() {
               </div>
             </section>
 
-            <section className="personal-plan" aria-labelledby="plan-title">
-              <div className="plan-heading">
-                <p className="eyebrow">{ui.result.recommended}</p>
-                <h2 id="plan-title">{route.label}</h2>
-                <p className="plan-lead">{result.recommendationText}</p>
-                {selectedFlock !== result.defaultRoute && (
-                  <em className="plan-kept">{ui.result.keptOriginal}</em>
-                )}
+            {/* Суть выбора: единственное, к чему надо прийти вовремя, — прогулка.
+                Блок про Ричарда одинаков для всех птиц, отличается только
+                строка-подсказка и она не решает за гостя. */}
+            <section className={`choice-brief is-${response.testResult}`} aria-labelledby="walk-title">
+              <div className="walk-card">
+                <h2 className="walk-title" id="walk-title"><RichText text={siteContent.walk.title} /></h2>
+                <dl className="walk-facts">
+                  <div>
+                    <dt>{siteContent.walk.whereLabel}</dt>
+                    <dd>{siteContent.walk.where}</dd>
+                  </div>
+                  <div>
+                    <dt>{siteContent.walk.whenLabel}</dt>
+                    <dd>{siteContent.walk.when}</dd>
+                  </div>
+                </dl>
               </div>
-              <div className="plan-list">
-                <p className="eyebrow">{ui.result.planEyebrow}</p>
-                <ol className="route-list">
-                  {route.items.map((item) => (
-                    <li key={item}>
-                      <span className="list-mark" aria-hidden="true"><Feather size={19} strokeWidth={1.7} /></span>
-                      <p><RichText text={item} /></p>
-                    </li>
-                  ))}
-                </ol>
-                {route.items.some((item) => item.includes('Ричард')) && (
-                  <p className="guide-note"><RichText text={ui.result.guideNote} /></p>
-                )}
-              </div>
-            </section>
 
-            <CommonSections />
+              <p className="choice-line">{result.choiceLine}</p>
+
+              <button className="choice-cta" type="button" onClick={openConfirmation}>
+                <span className="choice-cta-feather" aria-hidden="true">
+                  <Feather size={26} strokeWidth={1.6} />
+                </span>
+                <span className="choice-cta-text">{ui.result.cta}</span>
+                <ArrowDown size={17} aria-hidden="true" />
+              </button>
+            </section>
 
             <section className="confirmation content-grid" id="confirmation" aria-labelledby="confirmation-title">
               <div className="confirmation-intro">
@@ -788,32 +819,6 @@ function App() {
                 </div>
 
                 <div className="panel-row">
-                  {attendance === 'walk' && (
-                  <div className="party-size">
-                    <div>
-                      <label htmlFor="party-size">{siteContent.confirmation.partyLabel}</label>
-                      <p>{siteContent.confirmation.partyHint}</p>
-                    </div>
-                    <div className="stepper">
-                      <button type="button" aria-label="Уменьшить количество" onClick={() => setPartySize((value) => Math.max(1, value - 1))}>
-                        <Minus size={18} aria-hidden="true" />
-                      </button>
-                      <input
-                        id="party-size"
-                        type="number"
-                        min="1"
-                        max="20"
-                        inputMode="numeric"
-                        value={partySize}
-                        onChange={(event) => setPartySize(Math.max(1, Number(event.target.value) || 1))}
-                      />
-                      <button type="button" aria-label="Увеличить количество" onClick={() => setPartySize((value) => Math.min(20, value + 1))}>
-                        <Plus size={18} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                  )}
-
                 <div className={`dress-pledge ${pledgeError ? 'has-error' : ''} ${dressPledgeRequired ? '' : 'is-muted'}`}>
                   <label>
                     <input
@@ -840,7 +845,6 @@ function App() {
                 <div className="guest-message">
                   <div className="field-head">
                     <label htmlFor="guest-message">{siteContent.confirmation.messageLabel}</label>
-                    <p>{siteContent.confirmation.messageHint}</p>
                   </div>
                   <textarea
                     id="guest-message"
@@ -854,22 +858,26 @@ function App() {
                 </div>
 
                 <button className="button button-dark confirm-button" type="button" onClick={confirmRoute} disabled={attendance === null || saveStatus === 'saving'}>
-                  {saveStatus === 'saving' ? siteContent.confirmation.saving : siteContent.confirmation.submit} <Feather size={18} aria-hidden="true" />
+                  {saveStatus === 'saving'
+                    ? siteContent.confirmation.saving
+                    : isConfirmed
+                      ? ui.saved.change
+                      : siteContent.confirmation.submit} <Feather size={18} aria-hidden="true" />
                 </button>
 
                 {isConfirmed && (
                   <div className={`saved-state ${response.attendance === 'no' ? 'is-decline' : ''}`}>
-                    <Check size={20} aria-hidden="true" />
+                    <Check size={18} aria-hidden="true" />
                     <div>
                       <strong>
-                        {response.attendance === 'no' ? ui.saved.declinedTitle : siteContent.confirmation.savedTitle}
+                        {response.attendance === 'no' ? ui.saved.declinedTitle : ui.saved.inFlockTitle}
                       </strong>
                       <p>
                         {response.attendance === 'walk'
-                          ? fill(ui.saved.walk, { count: `${response.excursionPartySize} ${plural(response.excursionPartySize, 'птица', 'птицы', 'птиц')}` })
+                          ? ui.saved.walk
                           : response.attendance === 'later'
                             ? ui.saved.later
-                            : siteContent.confirmation.savedNo}
+                            : ui.saved.declined}
                       </p>
                     </div>
                   </div>
@@ -879,17 +887,26 @@ function App() {
               </div>
             </section>
 
+            <CommonSections />
+
             <Finale
               guestName={response.guestName}
-              selectedFlock={selectedFlock}
               attendance={response.attendance}
-              partySize={response.excursionPartySize}
               onEditRoute={openConfirmation}
               onRestart={restartTest}
             />
           </>
         )}
       </main>
+
+      {/* Маячок: единственное незакрытое дело. Гаснет, как только ответ отправлен
+          или как только гость сам доскроллил до лётного листа. */}
+      {stage === 'result' && response && !isConfirmed && !confirmationInView && (
+        <button className="beacon" type="button" onClick={openConfirmation}>
+          <Feather size={17} strokeWidth={1.9} aria-hidden="true" />
+          <span>{ui.beacon}</span>
+        </button>
+      )}
 
       {notice && <div className="toast" role="status">{notice}</div>}
     </div>
@@ -916,14 +933,13 @@ function SaveMessage({ status, onRetry }: { status: SaveStatus; onRetry: () => v
     )
   }
 
-  return (
-    <p className="save-message" role="status">{ui.save.demo}</p>
-  )
+  return null
 }
 
 function CommonSections() {
   return (
     <div className="common-sections">
+
       <section className="day-plan" id="day-plan" aria-labelledby="day-plan-title">
         <div className="section-heading-row">
           <div>
@@ -979,6 +995,11 @@ function CommonSections() {
                   </li>
                 ))}
               </ol>
+              {'link' in scenario && (
+                <a className="scenario-link" href={scenario.link.href}>
+                  {scenario.link.label} <ArrowUp size={14} aria-hidden="true" />
+                </a>
+              )}
             </article>
           ))}
           <aside className="walk-clothing">
@@ -1062,16 +1083,12 @@ function CommonSections() {
 
 function Finale({
   guestName,
-  selectedFlock,
   attendance,
-  partySize,
   onEditRoute,
   onRestart,
 }: {
   guestName: string
-  selectedFlock: Flock
   attendance: Attendance | null
-  partySize: number
   onEditRoute: () => void
   onRestart: () => void
 }) {
@@ -1087,31 +1104,12 @@ function Finale({
             <span className="day-part">DAY</span>
           </span>
         </h2>
-        <p className="finale-subtitle">{siteContent.event.eventDate} {siteContent.event.year}</p>
-        <div className="final-summary">
-          <div>
-            <span>{ui.finale.routeLabel}</span>
-            <strong>{declined ? ui.finale.routeDeclined : siteContent.routes[selectedFlock].label}</strong>
-          </div>
-          <div>
-            <span>{ui.finale.walkLabel}</span>
-            <strong>
-              {attendance === 'walk'
-                ? fill(ui.finale.walkConfirmed, { count: `${partySize} ${plural(partySize, 'птица', 'птицы', 'птиц')}` })
-                : attendance === 'later'
-                  ? ui.finale.walkLater
-                  : declined
-                    ? ui.finale.walkDeclined
-                    : ui.finale.walkPending}
-            </strong>
-          </div>
-        </div>
         <p className="final-note">
           {declined ? ui.finale.noteDeclined : ui.finale.note}
         </p>
         <div className="final-actions">
           <button className="button button-light" type="button" onClick={onEditRoute}>
-            <Users size={18} aria-hidden="true" /> {ui.finale.editRoute}
+            <Feather size={18} aria-hidden="true" /> {ui.saved.change}
           </button>
           <button className="button button-outline-light" type="button" onClick={onRestart}>
             <RefreshCcw size={18} aria-hidden="true" /> {ui.finale.restart}
