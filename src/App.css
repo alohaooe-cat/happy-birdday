@@ -1442,6 +1442,18 @@ h3 {
   background: var(--sky);
 }
 
+/* Ответ изменён, но ещё не записан: коралл вместо лайма, чтобы плашка
+   читалась как «нужно действие», а не как «всё готово». */
+.saved-state.is-pending {
+  background: var(--coral);
+}
+
+.saved-hint {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  opacity: 0.66;
+}
+
 .choice-button.is-selected svg {
   opacity: 1;
 }

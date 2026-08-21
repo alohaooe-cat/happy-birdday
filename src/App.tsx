@@ -5,6 +5,7 @@ import {
   ArrowUp,
   ArrowLeft,
   ArrowRight,
+  AlertCircle,
   Bird,
   Check,
   CloudLightning,
@@ -543,10 +544,14 @@ function App() {
   }
 
   const result = response ? siteContent.results[response.testResult] : null
-  const isConfirmed = response?.attendance != null
-    && response.attendance === attendance
-    && response.dressPledge === effectiveDressPledge
-    && (response.guestMessage ?? '') === guestMessage.trim()
+  const hasSavedAnswer = response?.attendance != null
+  const isConfirmed = hasSavedAnswer
+    && response!.attendance === attendance
+    && response!.dressPledge === effectiveDressPledge
+    && (response!.guestMessage ?? '') === guestMessage.trim()
+  // Ответ уже записан, но гость отметил другую строку — значит кнопка
+  // сохраняет изменение, а не регистрирует заново.
+  const hasPendingChanges = hasSavedAnswer && !isConfirmed
 
   return (
     <div className="site-shell">
@@ -857,15 +862,29 @@ function App() {
                   />
                 </div>
 
-                <button className="button button-dark confirm-button" type="button" onClick={confirmRoute} disabled={attendance === null || saveStatus === 'saving'}>
-                  {saveStatus === 'saving'
-                    ? siteContent.confirmation.saving
-                    : isConfirmed
-                      ? ui.saved.change
-                      : siteContent.confirmation.submit} <Feather size={18} aria-hidden="true" />
-                </button>
+                {/* Когда сохранённый ответ совпадает с формой, нажимать нечего:
+                    кнопку убираем, а как поменять — говорит подсказка под плашкой. */}
+                {!isConfirmed && (
+                  <button className="button button-dark confirm-button" type="button" onClick={confirmRoute} disabled={attendance === null || saveStatus === 'saving'}>
+                    {saveStatus === 'saving'
+                      ? siteContent.confirmation.saving
+                      : hasPendingChanges
+                        ? ui.saved.change
+                        : siteContent.confirmation.submit} <Feather size={18} aria-hidden="true" />
+                  </button>
+                )}
 
-                {isConfirmed && (
+                {hasPendingChanges && saveStatus !== 'saving' && (
+                  <div className="saved-state is-pending" role="status">
+                    <AlertCircle size={18} aria-hidden="true" />
+                    <div>
+                      <strong>{ui.saved.pendingTitle}</strong>
+                      <p>{ui.saved.pending}</p>
+                    </div>
+                  </div>
+                )}
+
+                {isConfirmed && saveStatus !== 'error' && (
                   <div className={`saved-state ${response.attendance === 'no' ? 'is-decline' : ''}`}>
                     <Check size={18} aria-hidden="true" />
                     <div>
@@ -879,6 +898,7 @@ function App() {
                             ? ui.saved.later
                             : ui.saved.declined}
                       </p>
+                      <p className="saved-hint">{ui.saved.hint}</p>
                     </div>
                   </div>
                 )}
@@ -918,10 +938,6 @@ function SaveMessage({ status, onRetry }: { status: SaveStatus; onRetry: () => v
 
   if (status === 'saving') {
     return <p className="save-message" role="status">{ui.save.sending}</p>
-  }
-
-  if (status === 'success') {
-    return <p className="save-message is-success" role="status">{ui.save.success}</p>
   }
 
   if (status === 'error') {
