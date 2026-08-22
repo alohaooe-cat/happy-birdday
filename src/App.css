@@ -1073,6 +1073,14 @@ h3 {
   line-height: 0.95;
 }
 
+.name-error {
+  margin: 8px 0 0;
+  color: #7e1607;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .name-hint {
   max-width: 42ch;
   margin-bottom: clamp(30px, 4vw, 48px);

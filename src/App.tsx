@@ -186,6 +186,29 @@ function RichText({ text }: { text: string }) {
   )
 }
 
+/**
+ * Одинокие половинки эмодзи и управляющие символы. На телефоне backspace
+ * иногда съедает половину эмодзи, и в поле остаётся невалидный символ:
+ * при отправке он превращается в «\uFFFD», и в таблице вместо имени
+ * оказывается один нечитаемый знак.
+ */
+function cleanGuestName(value: string) {
+  let out = ''
+  // for..of идёт по code points, поэтому целые эмодзи не разбираются
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0
+    if (code >= 0xd800 && code <= 0xdfff) continue
+    if (code < 0x20 || code === 0x7f || code === 0xfffd) continue
+    out += char
+  }
+  return out.replace(/\s+/g, ' ').trim()
+}
+
+/** В имени должна быть хотя бы одна буква или цифра. */
+function isReadableName(value: string) {
+  return /[\p{L}\p{N}]/u.test(value)
+}
+
 function fill(template: string, values: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => String(values[key] ?? match))
 }
@@ -254,6 +277,7 @@ function App() {
   const [guestMessage, setGuestMessage] = useState(initialResponse?.guestMessage ?? '')
   const [dressPledge, setDressPledge] = useState(initialResponse?.dressPledge ?? false)
   const [pledgeError, setPledgeError] = useState(false)
+  const [nameError, setNameError] = useState(false)
   const [confirmationInView, setConfirmationInView] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(initialResponse ? 'demo' : 'idle')
   const [notice, setNotice] = useState('')
@@ -427,8 +451,12 @@ function App() {
 
   const submitName = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const cleanName = guestName.trim()
-    if (!cleanName) return
+    const cleanName = cleanGuestName(guestName)
+    if (!isReadableName(cleanName)) {
+      setNameError(true)
+      return
+    }
+    setNameError(false)
 
     const now = new Date().toISOString()
     const picked = siteContent.questions.map((question, index) => ({
@@ -730,13 +758,18 @@ function App() {
                     id="guest-name"
                     name="guest-name"
                     value={guestName}
-                    onChange={(event) => setGuestName(event.target.value)}
+                    aria-invalid={nameError || undefined}
+                    onChange={(event) => {
+                      setGuestName(event.target.value)
+                      if (nameError) setNameError(false)
+                    }}
                     autoComplete="name"
                     autoFocus
                     required
                     maxLength={80}
                     placeholder={ui.name.placeholder}
                     />
+                    {nameError && <p className="name-error" role="alert">{ui.name.error}</p>}
                   </div>
                   <div className="quiz-actions">
                     <button className="button button-ghost" type="button" onClick={() => setStage('quiz')}>
